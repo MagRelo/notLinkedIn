@@ -4,7 +4,8 @@ import { buyTokens, sellTokens, burnTokens, drainEscrow } from '../ContractActio
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    currentUser: state.user.data
+    currentUser: state.user.data,
+    web3: state.web3
   }
 }
 

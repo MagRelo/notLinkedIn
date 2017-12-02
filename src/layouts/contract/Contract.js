@@ -10,7 +10,7 @@ class Profile extends Component {
   }
 
   componentDidMount(){
-    this.props.getContract(this.props.routeParams.contractId)
+
   }
 
   render() {
@@ -20,8 +20,8 @@ class Profile extends Component {
           <div className="pure-u-1 pure-u-md-1-6"></div>
           <div className="pure-u-1 pure-u-md-2-3">
             <div style={{marginTop: '1em'}}>
-              {this.props.selectedContract ?                
-                <ContractDetail contractData={this.props.selectedContract}/>
+              {this.props.selectedContract ?
+                <ContractDetail contractData={this.props.selectedContract} contractId={this.props.routeParams.contractId}/>
                 :
                 null
               }

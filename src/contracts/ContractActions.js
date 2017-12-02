@@ -1,6 +1,10 @@
 import {sendEvent} from '../analytics/AnalyticsActions'
 import { browserHistory } from 'react-router'
 
+import ServesaContract from '../../build/contracts/Servesa.json'
+const contractAddress = ''
+const fromAddress = ''
+
 import store from '../store'
 
 
@@ -94,26 +98,32 @@ export function listContracts() {
 }
 
 export function getContract(contractId) {
+
+  console.log('get contract hit')
+
   return function(dispatch) {
 
     // "loading"
     dispatch(requestSent())
 
-    return fetch('/api/contract/' + contractId,
-      {
-        method: "GET"
-      }
-    ).then(rawResponse => {
-        if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
-        return rawResponse.json()
-      }
-    ).then(contract => {
-        dispatch(contractUpdated(contract))
-      }
-    ).catch(error => {
-      console.error('action error', error)
-      return
-    })
+
+
+
+    // return fetch('/api/contract/' + contractId,
+    //   {
+    //     method: "GET"
+    //   }
+    // ).then(rawResponse => {
+    //     if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
+    //     return rawResponse.json()
+    //   }
+    // ).then(contract => {
+    //     dispatch(contractUpdated(contract))
+    //   }
+    // ).catch(error => {
+    //   console.error('action error', error)
+    //   return
+    // })
 
   }
 }
@@ -144,48 +154,57 @@ export function generateWords(){
 
 
 export function createContract(currentUser, contractOptions) {
-
   let web3 = store.getState().web3.web3Instance
-  console.log('create - web3 init:', !!web3)
 
   return function(dispatch) {
 
     // "loading" display
     dispatch(requestSent())
-
     // send analytics
     dispatch(sendEvent('create', { 'contractOptions': contractOptions } ))
 
     if(web3){
-      
+
+      const contractInstance = web3.eth.contract(ServesaContract.abi).at('0x40f8Da2C9B078F6693D80BaC02182268E8B1779a')
+
+      contractInstance.calculateNextBuyPrice((error, response) => {
+        console.log('Next Buy Price:', response.toNumber())
+      })
+      contractInstance.calculateNextSellPrice((error, response) => {
+        console.log('Next Sell Price:', response.toNumber())
+      })
+      contractInstance.totalCurrentTokens((error, response) => {
+        console.log('Tokens:', response.toNumber())
+      })
+
     }
 
 
-    return fetch('/api/contract/create',
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-auth-token": currentUser.token
-        },
-        body: JSON.stringify({
-          contractOptions: contractOptions
-        })
-      })
-      .then(rawResponse => {
-        if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
-        return rawResponse.json()
-      })
-      .then(contract => {
-        dispatch(contractUpdated(contract))
-
-        // send to profile
-        return browserHistory.push('/contract/' + contract._id)
-      })
-      .catch(error => {
-        console.error('action error', error)
-        return
-      })
+    // return fetch('/api/contract/create',
+    //   {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       "x-auth-token": currentUser.token
+    //     },
+    //     body: JSON.stringify({
+    //       contractOptions: contractOptions
+    //     })
+    //   })
+    //   .then(rawResponse => {
+    //     if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
+    //     return rawResponse.json()
+    //   })
+    //   .then(contract => {
+    //     dispatch(contractUpdated(contract))
+    //
+    //     // send to profile
+    //     return browserHistory.push('/contract/' + contract._id)
+    //   })
+    //   .catch(error => {
+    //     console.error('action error', error)
+    //     return
+    //   })
 
   }
 }

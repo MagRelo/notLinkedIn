@@ -211,7 +211,6 @@ class CreateContractForm extends Component {
           <button
             type="submit"
             className="pure-button pure-button-primary"
-            disabled={!this.props.currentUser}
             onClick={this.openModal}> + Add contract
           </button>
         </form>
