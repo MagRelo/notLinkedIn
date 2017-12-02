@@ -517,3 +517,9 @@ ul.pure-menu-list.navbar-right {
 .contractOptions div div{
   margin-top: .3em;
 }
+
+.accountNavText{
+  font-size: 14px;
+  color: #FF5934;
+  padding: 0.75em 1em;
+}

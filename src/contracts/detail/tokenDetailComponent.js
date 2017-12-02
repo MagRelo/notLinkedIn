@@ -159,6 +159,10 @@ class FormComponent extends Component {
         {this.state.loading ? <p>loading</p> :
 
         <div>
+          <button
+            style={{}}
+            className="pure-button pure-button-primary"
+            onClick={()=>{this.getContractData(this.state.contractInstanceAddress)}}>Refresh</button>
           <h3>Contract Details</h3>
           <div style={{marginLeft: '1em'}}>
             <p>balance: {this.state.balance} ETH  ($ {this.round(this.state.exchangeRate * this.state.balance, 2)} USD)</p>
@@ -256,7 +260,7 @@ class FormComponent extends Component {
                 })}
 
               </tbody>
-            </table>            
+            </table>
           </div>
         </div>
         }

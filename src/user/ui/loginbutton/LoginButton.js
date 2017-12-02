@@ -3,28 +3,20 @@ import React from 'react'
 import TwitterLogin from 'react-twitter-auth'
 
 
-const LoginButton = ({ loginSuccess }) => {
+const LoginButton = ({ accounts }) => {
 
-  function onSuccess(response) {
-    response.json().then(body => {
-      body.user.token = body.token
-      loginSuccess(body.user)
-    });
-  }
+  function format(accountId, length){
+    let string = ''
+    accountId.split('').reverse().some((element)=>{
+      string += element
+      return string.length === length
+    })
 
-  function onFailed(error) {
-    alert(error);
+    return '...' + string
   }
 
   return(
-    <TwitterLogin
-      text=""
-      style={{backgroundColor: 'inherit', border: 'none'}}
-      requestTokenUrl="/api/v1/auth/twitter/reverse"
-      loginUrl="/auth/twitter"
-      onFailure={onFailed}
-      onSuccess={onSuccess}
-    />
+    <div className="accountNavText">Account: {format(accounts[0] || '', 6)}</div>
   )
 }
 

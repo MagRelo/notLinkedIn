@@ -26,19 +26,11 @@ class App extends Component {
   render() {
     const OnlyAuthLinks = VisibleOnlyAuth(() =>
       <span>
-        <li className="pure-menu-item">
-          <Link to="/profile" activeStyle={{ color: '#FF5934' }} className="pure-menu-link">
-            <img className="profile-menu-link" src={userIcon}></img>
-          </Link>
-        </li>
       </span>
     )
 
     const OnlyGuestLinks = HiddenOnlyAuth(() =>
       <span>
-        <li className="pure-menu-item">
-          <LoginButtonContainer/>
-        </li>
       </span>
     )
 
@@ -56,9 +48,9 @@ class App extends Component {
 
           <Link to="/" className="pure-menu-heading pure-menu-link">
             Servésa</Link>
-          <ul className="pure-menu-list navbar-right">
+          <ul className="pure-menu-list navbar-right">            
             <li className="pure-menu-item">
-              <Link to="/contracts" activeStyle={{ color: '#FF5934' }} className="pure-menu-link">Groups</Link>
+              <LoginButtonContainer/>
             </li>
             <OnlyGuestLinks />
             <OnlyAuthLinks />

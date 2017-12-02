@@ -3,7 +3,9 @@ import LoginButton from './LoginButton'
 import { loginUser } from '../../userActions'
 
 const mapStateToProps = (state, ownProps) => {
-  return {}
+  return {
+    accounts: state.web3.accounts
+  }
 }
 
 const mapDispatchToProps = (dispatch) => {
