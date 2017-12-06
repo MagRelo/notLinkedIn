@@ -297,9 +297,10 @@ class FormComponent extends Component {
           :
 
         <div>
-          <h3>Contract Details</h3>
+
           <h1>{this.state.contractName}</h1>
           <div>
+            <h3>Contract Details</h3>
             <div className="pure-g">
               <div className="pure-u-1 pure-u-md-1-2 pad-box">
                 <p>Max tokens: <span>{this.state.maxTokens}</span> </p>
@@ -308,12 +309,11 @@ class FormComponent extends Component {
                 <p>Token base price: <span> {this.displayWei(this.state.tokenBasePrice)}</span></p>
                 <p>Token pricing exponent: <span>{this.state.tokenPriceExponent}</span></p>
                 <p>Token pricing divisor: <span>{this.state.tokenPriceExponentDivisor}</span></p>
-                <p>Balance: <span>{this.displayWei(this.state.balance)}</span></p>
+                <p>Contact balance: <span>{this.displayWei(this.state.balance)}</span></p>
               </div>
 
               <div className="pure-u-1 pure-u-md-1-2  pad-box">
-                <hr></hr>
-                <p>Contract Owner: &nbsp;
+                <p>Contract owner: &nbsp;
                   <span>
                     <a className="pure-link-primary"
                       href={"https://rinkeby.etherscan.io/address/" + this.state.owner}
@@ -323,7 +323,6 @@ class FormComponent extends Component {
                 </p>
                 <p>Owner can burn: <span>{this.state.ownerCanBurn ? 'Yes': 'No'}</span></p>
                 <p>Owner can drain: <span>{this.state.ownerCanDrain ? 'Yes': 'No'}</span></p>
-                <hr></hr>
                 <p>Etherscan: &nbsp;
                   <span>
                     <a className="pure-link-primary"
@@ -347,9 +346,9 @@ class FormComponent extends Component {
             <div className="pure-u-1 pure-u-md-1-2 pad-box">
 
               <h3>Buy</h3>
-              <p>next token price: <span>{this.displayWei(this.state.buyPrice)}</span></p>
               <form className="pure-form" onSubmit={this.buyTokens.bind(this)}>
                 <fieldset>
+                  <p>Next token price: <span>{this.displayWei(this.state.buyPrice)}</span></p>
                   <label>Tokens to purchase (max: {this.state.maxTokens - this.state.tokens})</label>
                   <input
                     className="pure-input-1"
@@ -373,9 +372,9 @@ class FormComponent extends Component {
             <div className="pure-u-1 pure-u-md-1-2 pad-box">
 
               <h3>Sell</h3>
-              <p>sell price: <span>{this.displayWei(this.state.sellPrice)}</span></p>
               <form className="pure-form" onSubmit={this.sellTokens.bind(this)}>
                 <fieldset>
+                  <p>Sell price: <span>{this.displayWei(this.state.sellPrice)}</span></p>
                   <label>Tokens to sell (Max:{this.state.activeAccountTokens})</label>
                   <input type="text" className="pure-input-1"
                     type="number"
@@ -397,25 +396,23 @@ class FormComponent extends Component {
             <div className="pure-u-1 pure-u-md-1-2 pad-box">
 
               <h3>Challenge</h3>
-              <div style={{marginLeft: '1em'}}>
-                <form className="pure-form" onSubmit={this.testAddress.bind(this)}>
-                  <fieldset>
-                    <label>Address</label>
-                    <input
-                      className="pure-input-1"
-                      type="text"
-                      value={this.state.testIdAddress}
-                      onChange={(event)=>{this.setState({testIdAddress: event.target.value})}}></input>
-                  </fieldset>
+              <form className="pure-form" onSubmit={this.testAddress.bind(this)}>
+                <fieldset>
+                  <label>Address</label>
+                  <input
+                    className="pure-input-1"
+                    type="text"
+                    value={this.state.testIdAddress}
+                    onChange={(event)=>{this.setState({testIdAddress: event.target.value})}}></input>
+                </fieldset>
 
-                  <div style={{textAlign: 'right'}}>
-                    <button
-                      className="pure-button pure-button-primary"
-                      disabled={this.state.testIdAddress == ''}>Test</button>
-                  </div>
+                <div style={{textAlign: 'right'}}>
+                  <button
+                    className="pure-button pure-button-primary"
+                    disabled={this.state.testIdAddress == ''}>Test</button>
+                </div>
 
-                </form>
-              </div>
+              </form>
 
             </div>
           </div>
