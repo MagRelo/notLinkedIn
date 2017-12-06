@@ -286,10 +286,10 @@ class FormComponent extends Component {
           <p>Loading:</p>
           <ul>
             <li>
-              <p>MetaMask detected: {}</p>
+              <p>MetaMask detected: {!!this.props.web3.web3Instance ? 'Yes' : 'No'}</p>
             </li>
             <li>
-              <p>MetaMask account detected: {}</p>
+              <p>MetaMask account detected: {!!this.props.web3.accounts[0] ? 'Yes' : 'No'}</p>
             </li>
           </ul>
         </div>
