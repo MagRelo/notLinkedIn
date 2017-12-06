@@ -280,7 +280,21 @@ class FormComponent extends Component {
 
       <main className="">
 
-        {this.state.loading ? <p>loading</p> :
+        {this.state.loading ?
+
+        <div>
+          <p>Loading:</p>
+          <ul>
+            <li>
+              <p>MetaMask detected: {}</p>
+            </li>
+            <li>
+              <p>MetaMask account detected: {}</p>
+            </li>
+          </ul>
+        </div>
+
+          :
 
         <div>
           <h3>Contract Details</h3>
@@ -349,7 +363,8 @@ class FormComponent extends Component {
                 <div style={{textAlign: 'right'}}>
                   <button
                     type="submit"
-                    className="pure-button pure-button-primary">Buy
+                    className="pure-button pure-button-primary"
+                    disabled={this.state.tokensToPurchase < 1 || !this.state.activeAccount}>Buy
                   </button>
                 </div>
               </form>
@@ -374,7 +389,7 @@ class FormComponent extends Component {
                   <button
                     type="submit"
                     className="pure-button pure-button-primary"
-                    >Sell</button>
+                    disabled={this.state.tokensToSell < 1 || !this.state.activeAccount}>Sell</button>
                 </div>
               </form>
 
@@ -392,7 +407,13 @@ class FormComponent extends Component {
                       value={this.state.testIdAddress}
                       onChange={(event)=>{this.setState({testIdAddress: event.target.value})}}></input>
                   </fieldset>
-                  <button className="pure-button pure-button-primary">Test</button>
+
+                  <div style={{textAlign: 'right'}}>
+                    <button
+                      className="pure-button pure-button-primary"
+                      disabled={this.state.testIdAddress == ''}>Test</button>
+                  </div>
+
                 </form>
               </div>
 
@@ -419,7 +440,10 @@ class FormComponent extends Component {
                   value={this.state.burnCount}
                   onChange={(event)=>{this.setState({burnCount: event.target.value})}}></input>
 
-                <button className="pure-button pure-button-primary">Burn</button>
+                <div style={{textAlign: 'right'}}>
+                  <button className="pure-button pure-button-primary"
+                    disabled={this.state.burnCount < 1}>Burn</button>
+                </div>
               </form>
           </div>
           <div className="pure-u-1 pure-u-md-1-2 pad-box">
@@ -432,7 +456,11 @@ class FormComponent extends Component {
                 value={this.state.drainAmount}
                 onChange={(event)=>{this.setState({drainAmount: event.target.value})}}></input>
 
-              <button className="pure-button pure-button-primary">Drain</button>
+              <div style={{textAlign: 'right'}}>
+                <button
+                  className="pure-button pure-button-primary"
+                  disabled={this.state.drainAmount <= 0}>Drain</button>
+              </div>
             </form>
 
           </div>
@@ -483,17 +511,20 @@ class FormComponent extends Component {
               <div className="confirm-body-container">
 
                 <p>Your transaction has been successfully submitted. Transactions typically take about 45 seconds to be confirmed.</p>
-                <p>You can view this trasaction on Etherscan: &nbsp;
+                <p>You can view this transaction on Etherscan: &nbsp;
                   <span>
                     <a className="pure-link-primary"
                       href={"https://rinkeby.etherscan.io/tx/" + this.state.transactionId}
                       target="_blank">View Transaction</a>
                   </span>
                 </p>
-                <p>After the trasaction has been confirmed you can refresh this page to see the updated contract data.</p>
+                <p>After the transaction has been confirmed you can refresh the contract to see the updated contract data.</p>
 
-                <button className="pure-button pure-button-primary"
-                  onClick={this.closeModal.bind(this)}>OK</button>
+                <div style={{textAlign: 'right'}}>
+                  <button className="pure-button pure-button-primary"
+                    onClick={this.closeModal.bind(this)}>OK
+                  </button>
+                </div>
 
               </div>
             </div>
