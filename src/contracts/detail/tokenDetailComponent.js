@@ -297,48 +297,56 @@ class FormComponent extends Component {
           :
 
         <div>
+          <h3>Contract name</h3>
+          <div className="pad-box">
+              <h1>{this.state.contractName}</h1>
+          </div>
 
-          <h1>{this.state.contractName}</h1>
           <div>
-            <h3>Contract Details</h3>
+            <h3>Contract details</h3>
             <div className="pure-g">
-              <div className="pure-u-1 pure-u-md-1-2 pad-box">
-                <p>Max tokens: <span>{this.state.maxTokens}</span> </p>
-                <p>Tokens issued: <span> {this.state.tokens}</span></p>
-                <p>Token holders: <span>{this.state.funders}</span></p>
-                <p>Token base price: <span> {this.displayWei(this.state.tokenBasePrice)}</span></p>
-                <p>Token pricing exponent: <span>{this.state.tokenPriceExponent}</span></p>
-                <p>Token pricing divisor: <span>{this.state.tokenPriceExponentDivisor}</span></p>
-                <p>Contact balance: <span>{this.displayWei(this.state.balance)}</span></p>
+              <div className="pure-u-1 pure-u-md-1-2">
+                <div className="pad-box">
+                  <p>Max tokens: <span>{this.state.maxTokens}</span> </p>
+                  <p>Tokens issued: <span> {this.state.tokens}</span></p>
+                  <p>Token holders: <span>{this.state.funders}</span></p>
+                  <p>Token base price: <span> {this.displayWei(this.state.tokenBasePrice)}</span></p>
+                  <p>Token pricing exponent: <span>{this.state.tokenPriceExponent}</span></p>
+                  <p>Token pricing divisor: <span>{this.state.tokenPriceExponentDivisor}</span></p>
+                  <p>Contact balance: <span>{this.displayWei(this.state.balance)}</span></p>
+                </div>
               </div>
 
-              <div className="pure-u-1 pure-u-md-1-2  pad-box">
-                <p>Contract owner: &nbsp;
+              <div className="pure-u-1 pure-u-md-1-2">
+                <div className="pad-box">
+                  <p>Contract owner: &nbsp;
+                    <span>
+                      <a className="pure-link-primary"
+                        href={"https://rinkeby.etherscan.io/address/" + this.state.owner}
+                        target="_blank">View Owner Account
+                      </a>
+                    </span>
+                  </p>
+                  <p>Owner can burn: <span>{this.state.ownerCanBurn ? 'Yes': 'No'}</span></p>
+                  <p>Owner can drain: <span>{this.state.ownerCanDrain ? 'Yes': 'No'}</span></p>
+                  <p>Etherscan: &nbsp;
+                    <span>
+                      <a className="pure-link-primary"
+                        href={"https://rinkeby.etherscan.io/address/" + this.state.contractInstanceAddress}
+                        target="_blank">View Contract
+                      </a>
+                    </span>
+                  </p>
+                  <p>
                   <span>
-                    <a className="pure-link-primary"
-                      href={"https://rinkeby.etherscan.io/address/" + this.state.owner}
-                      target="_blank">View Owner Account
-                    </a>
+                    <button
+                      className="pure-button pure-button-primary"
+                      onClick={()=>{this.loadContract(this.state.contractInstanceAddress)}}>Refresh Data</button>
                   </span>
-                </p>
-                <p>Owner can burn: <span>{this.state.ownerCanBurn ? 'Yes': 'No'}</span></p>
-                <p>Owner can drain: <span>{this.state.ownerCanDrain ? 'Yes': 'No'}</span></p>
-                <p>Etherscan: &nbsp;
-                  <span>
-                    <a className="pure-link-primary"
-                      href={"https://rinkeby.etherscan.io/address/" + this.state.contractInstanceAddress}
-                      target="_blank">View Contract
-                    </a>
-                  </span>
-                </p>
-                <p>
-                <span>
-                  <button
-                    className="pure-button pure-button-primary"
-                    onClick={()=>{this.loadContract(this.state.contractInstanceAddress)}}>Refresh Data</button>
-                </span>
-                </p>
+                  </p>
+                </div>
               </div>
+
             </div>
           </div>
 
