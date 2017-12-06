@@ -7,16 +7,16 @@ const LoginButton = ({ accounts }) => {
 
   function format(accountId, length){
     let string = ''
-    accountId.split('').reverse().some((element)=>{
+    accountId.split('').some((element)=>{
       string += element
       return string.length === length
     })
 
-    return '...' + string
+    return string + '...'
   }
 
   return(
-    <div className="accountNavText">Account: {format(accounts[0] || '', 6)}</div>
+    <div className="accountNavText">Account: {format(accounts[0] || '', 7)}</div>
   )
 }
 

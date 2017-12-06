@@ -5,6 +5,7 @@ const nowUnix = new Date().getTime()/1000;
 const nowParsed = parseInt(nowUnix.toFixed(0), 10);
 const config = {
   ownerAddress: '',
+  contractName: 'testName',
   ownerCanBurn: true,
   ownerCanSpend: true,
   tokenBasePrice: 10000000000000000, // 0.01 ether
@@ -25,6 +26,7 @@ module.exports = function(deployer, network, accounts) {
     if(network == "develop") {
       return factory.newContract(
         config.ownerAddress,
+        config.contractName,
         config.ownerCanBurn,
         config.ownerCanSpend,
         config.tokenBasePrice,

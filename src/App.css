@@ -31,12 +31,11 @@ body,
 
 h1{
   color: #eceeef;
-  border-bottom: solid 2px;
 }
 
 h2, h3 {
   font-family: 'Michroma', 'Arial Narrow', sans-serif;
-  color: #e7edf1;
+  color: #103A52;
   border-bottom: solid 1px;
   margin-bottom: 0;
   line-height: 2em;
@@ -49,6 +48,30 @@ h2, h3 {
 .currency-box{
   float: right;
   color: #129c17;
+}
+
+
+hr{
+  border-color: #103A52;
+  border-width: 0;
+  border-bottom-width: 1px;
+}
+
+.pad-box{
+  padding: 0 1em;
+  box-sizing: border-box;
+}
+
+.pad-box > p,
+.pad-box > form > fieldset > p {
+  color: #103A52;
+}
+
+
+.pad-box > p > span,
+.pad-box > form > fieldset > p > span {
+  float: right;
+  color: white;
 }
 
 /*LEGIT*/
@@ -133,6 +156,26 @@ h2, h3 {
   color: #222222;
 }
 
+/*Confirmation modal */
+.confirm-container{
+  min-width: 320px;
+  background-color: #175772;
+}
+
+.confirm-title-container{
+  background-color: #103A52;
+  padding: 1em;
+}
+
+.confirm-body-container{
+  padding: 0 1em 1em 1em;
+}
+
+
+
+
+
+/*Confirmation modal */
 
 
 .editor-input{
@@ -169,6 +212,10 @@ a.pure-button-primary,
 a.pure-button-primary:hover,
 .pure-button-primary:hover {
   background-color: #FF5934;
+}
+
+a.pure-link-primary{
+  color: #FF5934
 }
 
 .pure-button-success {
@@ -520,6 +567,6 @@ ul.pure-menu-list.navbar-right {
 
 .accountNavText{
   font-size: 14px;
-  color: #FF5934;
+  color: #ffffff;
   padding: 0.75em 1em;
 }

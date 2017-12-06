@@ -1,21 +1,13 @@
 pragma solidity 0.4.18;
 import './Servesa.sol';
 
-/*name: this.state.name,
-avatarUrl: this.state.avatarUrl,
-wordArray: this.props.searchWords,
-ownerCanBurn: this.state.ownerCanBurn,
-ownerCanDrain: this.state.ownerCanDrain,
-tokenBasePrice: 10,
-exponent: 2,
-exponentDivisor: 10000*/
-
 contract ServesaFactory {
   uint public contractCount;
   mapping(address => address[]) public contracts;
 
   function newContract(
     address ownerAddress,
+    string contractName,
     bool ownerCanBurn,
     bool ownerCanSpend,
     uint tokenBasePrice,
@@ -24,6 +16,7 @@ contract ServesaFactory {
 
     Servesa contractId = new Servesa(
       ownerAddress,
+      contractName,
       ownerCanBurn,
       ownerCanSpend,
       tokenBasePrice,

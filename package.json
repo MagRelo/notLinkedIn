@@ -51,6 +51,8 @@
     "whatwg-fetch": "^1.0.0"
   },
   "dependencies": {
+    "big.js": "^5.0.3",
+    "bignumber.js": "^5.0.0",
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",
     "compression": "^1.7.0",
