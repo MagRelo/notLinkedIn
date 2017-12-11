@@ -4,7 +4,10 @@ Influence group dynamics by programatically adjusting incentives in response to 
 ## Contract structure
 ### contract setup data
 - contract owner
-- contract info (name, avatar, etc., optional functions)
+- contract meta info 
+  - name
+  - avatar
+- tokenBasePrice
 - pledge curve equation (quasilinear enter preference?)
 - withdraw curve equation (quasilinear leave preference?)
 
@@ -18,5 +21,5 @@ Influence group dynamics by programatically adjusting incentives in response to 
 
 ### optional functions
 - challenge (test an id for token ownership)
-- collect (owner can burn a depositor’s tokens)
+- collect (owner can burn a depositor’s tokens, removing thier claim to the escrow balance)
 - spend (owner can move funds from the contract escrow to the owner’s personal account)
