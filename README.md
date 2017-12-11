@@ -21,5 +21,5 @@ Influence group dynamics by programatically adjusting incentives in response to 
 
 ### optional functions
 - challenge (test an id for token ownership)
-- collect (owner can burn a depositor’s tokens, removing thier claim to the escrow balance)
+- collect (owner can burn a depositor’s tokens, removing their claim to the escrow balance)
 - spend (owner can move funds from the contract escrow to the owner’s personal account)
