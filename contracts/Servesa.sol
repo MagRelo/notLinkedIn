@@ -30,6 +30,7 @@ contract Servesa {
   uint public tokenBasePrice = 100000000000000;
   uint public tokenPriceExponent = 1;
   uint public tokenPriceExponentDivisor = 10000;
+  uint public tokenPriceLinearDivisor = 1000;
 
   event NewContract(address ownerAddress, string contractName);
   event Buy(address indexed funder, uint tokenCount);
@@ -37,6 +38,7 @@ contract Servesa {
   event Burn(address indexed funder, uint tokenCount);
   event Drain(uint amount);
   event Sunset(bool hasSunset);
+  event FallbackEvent(address sender, uint amount);
 
   function Servesa (
     address ownerAddress,
@@ -45,8 +47,8 @@ contract Servesa {
     bool ownerCanSpendInit,
     uint maxTokensInit,
     uint tokenBasePriceInit,
-    uint tokenPriceExponentInit,
     uint tokenPriceExponentDivisorInit,
+    uint tokenPriceLinearDivisorInit,
     uint sunsetWithdrawPeriodInit) public {
 
     owner = ownerAddress;
@@ -54,9 +56,10 @@ contract Servesa {
     ownerCanBurn = ownerCanBurnInit;
     ownerCanSpend = ownerCanSpendInit;
     maxTokens = maxTokensInit;
+
     tokenBasePrice = tokenBasePriceInit;
-    tokenPriceExponent = tokenPriceExponentInit;
     tokenPriceExponentDivisor = tokenPriceExponentDivisorInit;
+    tokenPriceLinearDivisor = tokenPriceLinearDivisorInit;
 
     sunsetWithdrawalPeriod = sunsetWithdrawPeriodInit;
     contractStartTime = now;
@@ -104,7 +107,7 @@ contract Servesa {
   * External accounts can pay directly to contract to fund it.
   */
   function () payable public {
-    buy();
+    FallbackEvent(msg.sender, msg.value);
   }
 
   /*
@@ -112,14 +115,19 @@ contract Servesa {
   */
   function buy() public payable onlyWhenLive {
 
-    // calculate purchase
+    // validate that enought value was sent
+    require(msg.value > 0);
+
+    // get token price
+    uint nextTokenPrice = calculateNextBuyPrice();
+
+    // validate that enought value was sent for at least one token
+    require(msg.value > nextTokenPrice);
+
+    // loop through calc purchase
     uint totalCost = 0;
     uint tokensToPurchase = 0;
-    uint nextTokenPrice = calculateNextBuyPrice();
-    while (totalCost.add(nextTokenPrice) < msg.value){
-
-        // dont allow orders that breach max token count
-        require(totalCurrentTokens.add(tokensToPurchase) < maxTokens);
+    while (totalCost.add(nextTokenPrice) < msg.value && totalCurrentTokens.add(tokensToPurchase) <= maxTokens){
 
         // increase totalCost & tokensToPurchase
         totalCost = totalCost.add(nextTokenPrice);
@@ -191,17 +199,17 @@ contract Servesa {
   /*
   * Burn: delete tokens without affecting escrow balance
   */
-  function burn(address addr, uint tokenCount) public onlyWhenLive onlyByOwner canBurn {
+  function burn(address burnAddress, uint tokenCount) public onlyWhenLive onlyByOwner canBurn {
 
     // addr must be funder
-    require(isFunder(addr));
+    require(isFunder(burnAddress));
 
     // decrease targets's token count
-    funders[addr].tokenCount = funders[addr].tokenCount.sub(tokenCount);
+    funders[burnAddress].tokenCount = funders[burnAddress].tokenCount.sub(tokenCount);
 
     // remove target if count == 0
-    if(funders[addr].tokenCount == 0){
-        delete funders[addr];
+    if(funders[burnAddress].tokenCount == 0){
+        delete funders[burnAddress];
         totalCurrentFunders = totalCurrentFunders.sub(1);
     }
 
@@ -209,7 +217,7 @@ contract Servesa {
     totalCurrentTokens = totalCurrentTokens.sub(tokenCount);
 
     // event
-    Burn(addr, 1);
+    Burn(burnAddress, tokenCount);
   }
 
   /*
@@ -250,7 +258,7 @@ contract Servesa {
     if(tokenPriceExponent == 1){
         return tokenBasePrice;
     } else {
-        return fracExp(tokenBasePrice, tokenPriceExponentDivisor, totalCurrentTokens, 2).add(tokenBasePrice.mul(totalCurrentTokens.div(1000)));
+        return fracExp(tokenBasePrice, tokenPriceExponentDivisor, totalCurrentTokens, 2).add(tokenBasePrice.mul(totalCurrentTokens.div(tokenPriceLinearDivisor)));
     }
   }
 

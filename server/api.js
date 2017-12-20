@@ -34,7 +34,7 @@ var getOne = function (req, res) {
 module.exports = function(app) {
 
   // TWITTER LOGIN
-  app.post('/api/v1/auth/twitter/reverse', authController.getTwitterRequestToken)
+  // app.post('/api/v1/auth/twitter/reverse', authController.getTwitterRequestToken)
   // app.get('/auth/twitter', [
   //   authController.twitterLogin,
   //   passport.authenticate('twitter-token', {session: false}),
@@ -47,51 +47,49 @@ module.exports = function(app) {
   //   authController.sendToken
   // ])
   //
-  app.post('/auth/twitter', [
-    authController.twitterLogin,
-    passport.authenticate('twitter-token', {session: false}),
-    function(req, res, next) {
-        if (!req.user) { return res.send(401, 'User Not Authenticated'); }
-        req.auth = { id: req.user.id }
-        return next();
-      },
-    authController.generateToken,
-    authController.sendToken
-  ])
+  // app.post('/auth/twitter', [
+  //   authController.twitterLogin,
+  //   passport.authenticate('twitter-token', {session: false}),
+  //   function(req, res, next) {
+  //       if (!req.user) { return res.send(401, 'User Not Authenticated'); }
+  //       req.auth = { id: req.user.id }
+  //       return next();
+  //     },
+  //   authController.generateToken,
+  //   authController.sendToken
+  // ])
 
 
   // USERS
-  app.post('/api/user/list', userController.listUsers);
-  app.post('/api/user/create', userController.saveUser);
+  // app.post('/api/user/list', userController.listUsers);
+  // app.post('/api/user/create', userController.saveUser);
 
 
   // CONTRACTS AUTH
-  app.post('/api/contract/create', [
-    authController.authenticate,
-    contractController.createContract
-  ]);
-  app.put('/api/contract/buy', [
-    authController.authenticate,
-    contractController.buyTokens
-  ]);
-  app.put('/api/contract/sell', [
-    authController.authenticate,
-    contractController.sellTokens
-  ]);
-  app.put('/api/contract/burn', [
-    authController.authenticate,
-    contractController.burnTokens
-  ]);
-  app.put('/api/contract/drain', [
-    authController.authenticate,
-    contractController.drainEscrow
-  ]);
+  app.post('/api/contract/create', contractController.createContract);
+  // app.put('/api/contract/buy', [
+  //   authController.authenticate,
+  //   contractController.buyTokens
+  // ]);
+  // app.put('/api/contract/sell', [
+  //   authController.authenticate,
+  //   contractController.sellTokens
+  // ]);
+  // app.put('/api/contract/burn', [
+  //   authController.authenticate,
+  //   contractController.burnTokens
+  // ]);
+  // app.put('/api/contract/drain', [
+  //   authController.authenticate,
+  //   contractController.drainEscrow
+  // ]);
 
   // CONTRACTS PUBLIC
   app.post('/api/contract/search', contractController.searchContracts);
-  app.get('/api/contract/list', contractController.listContracts);
-  app.get('/api/contract/words', contractController.generateWords);
-  app.get('/api/contract/:contractId', contractController.getContract);
+
+  // app.get('/api/contract/list', contractController.listContracts);
+  // app.get('/api/contract/words', contractController.generateWords);
+  // app.get('/api/contract/:contractId', contractController.getContract);
 
 
   // *FOLLOW*
@@ -99,9 +97,9 @@ module.exports = function(app) {
   // app.delete('/api/follow', userController.sellTokens);
 
   // * MESSAGES*
-  app.get('/api/messages/:userId', messageController.getMessagesByUser);
-  app.get('/api/timeline/:userId', messageController.getTimelineByUser);
-  app.post('/api/messages', messageController.saveMessage);
+  // app.get('/api/messages/:userId', messageController.getMessagesByUser);
+  // app.get('/api/timeline/:userId', messageController.getTimelineByUser);
+  // app.post('/api/messages', messageController.saveMessage);
 
 
   // *ANALYTICS*

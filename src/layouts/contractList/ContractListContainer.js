@@ -5,17 +5,11 @@ import { listContracts } from '../../contracts/ContractActions'
 
 
 const mapStateToProps = (state, ownProps) => {
-  return {
-    selectedContract: state.contracts.contract || {'contractOptions': {}}
-  }
+  return {}
 }
 
 const mapDispatchToProps = (dispatch) => {
-  return {
-    getList: () => {
-      dispatch(listContracts())
-    }
-  }
+  return {}
 }
 
 const ContractListContainer = connect(

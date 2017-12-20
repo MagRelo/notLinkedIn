@@ -10,8 +10,10 @@ contract ServesaFactory {
     string contractName,
     bool ownerCanBurn,
     bool ownerCanSpend,
+    uint maxTokens,
     uint tokenBasePrice,
-    uint tokenPriceExponent,
+    uint tokenPriceExponentDivisor,
+    uint tokenPriceLinearDivisor,
     uint sunsetWithdrawPeriod) public returns (address newAddress) {
 
     Servesa contractId = new Servesa(
@@ -19,8 +21,10 @@ contract ServesaFactory {
       contractName,
       ownerCanBurn,
       ownerCanSpend,
+      maxTokens,
       tokenBasePrice,
-      tokenPriceExponent,
+      tokenPriceExponentDivisor,
+      tokenPriceLinearDivisor,
       sunsetWithdrawPeriod
     );
 

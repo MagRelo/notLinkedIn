@@ -1,5 +1,4 @@
 import store from '../../store'
-import Web3 from 'web3'
 
 export const WEB3_INITIALIZED = 'WEB3_INITIALIZED'
 function web3Initialized(results) {
@@ -25,7 +24,7 @@ let getWeb3 = new Promise(function(resolve, reject) {
         web3Instance: web3
       }
 
-      console.log('Injected web3 detected:', window.web3.currentProvider);
+      console.log('Injected web3 detected:');
 
       resolve(store.dispatch(web3Initialized(results)))
     } else {

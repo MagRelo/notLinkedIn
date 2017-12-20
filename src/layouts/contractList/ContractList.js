@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { Link } from 'react-router'
 
 import ContractList from '../../contracts/list/contractListContainer'
 import CreateContractButton from '../../contracts/create/CreateContractContainer'
@@ -10,19 +11,16 @@ class Profile extends Component {
     this.state = {}
   }
 
-  componentDidMount(){
-    this.props.getList()
-  }
-
   render() {
     return(
       <main className="container">
         <div className="pure-g">
           <div className="pure-u-1 pure-u-lg-1-6"></div>
           <div className="pure-u-1 pure-u-lg-2-3">
-            <div style={{marginTop: '1em'}}>
-              <ContractList/>
-            </div>
+
+            <h1>Groups</h1>
+            <ContractList/>
+            
           </div>
         </div>
       </main>

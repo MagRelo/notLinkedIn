@@ -1,139 +1,39 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
+import {Tokenizer}  from 'react-typeahead';
 
-import ContractDetail from '../detail/tokenDetailContainer'
-
-import Modal from 'react-modal';
-const customStyles = {
-  overlay: {
-   backgroundColor   : 'rgba(16, 58, 82, 0.75)'
-  },
-  content : {
-    top                   : '50%',
-    left                  : '50%',
-    right                 : 'auto',
-    bottom                : 'auto',
-    marginRight           : '-40%',
-    transform             : 'translate(-50%, -50%)',
-    padding               : 'none'
-  }
-};
-
-const insertIntoArray = (arr, value) => {
-    return arr.reduce((result, element, index, array) => {
-        result.push(element);
-        if (index < array.length - 1) {
-            result.push(value);
-        }
-        return result;
-    }, []);
-};
-
-class FormComponent extends Component {
+class ContractList extends Component {
   constructor(props, { authData }) {
     super(props)
     authData = this.props
     this.state = {
-      modalIsOpen: false,
-      selectedContract: {
-        name: 'test',
-        tokenHistory: []
-      }
     }
-
-    this.openModal = this.openModal.bind(this);
-    this.afterOpenModal = this.afterOpenModal.bind(this);
-    this.closeModal = this.closeModal.bind(this);
   }
 
-  // Modal functions
-  openModal(data) {
-    this.setState({
-      modalIsOpen: true,
-      selectedContract: data
-    });
+  componentDidMount(){
+    this.props.loadList()
   }
-  afterOpenModal() { }
-  closeModal() { this.setState({modalIsOpen: false}); }
 
   render() {
     return(
-      <main className="">
-        <div className="pure-g">
-          <div className="pure-u-1-1">
+      <main className="pure-g">
 
-            <Modal
-              isOpen={this.state.modalIsOpen}
-              onAfterOpen={this.afterOpenModal}
-              onRequestClose={this.closeModal}
-              style={customStyles}
-              contentLabel=''>
+        {this.props.list.map(contract => {
 
-              <ContractDetail contractData={this.state.selectedContract} closeModalFunction={this.closeModal}/>
+            return <div className="pure-u-1 pure-u-md-1-3 tile-outer" key={contract.deployedAddress}>
+                <Link to={"/contract/" + contract.deployedAddress}>
+                  <div className="tile-inner">
+                    <h3> {contract.contractOptions.contractName} </h3>
+                  </div>
+                </Link>
+              </div>
 
-            </Modal>
+          })
+        }
 
-            <ul className="contractList">
-              {this.props.globalList
-                .map((contractData) =>
-
-                  <li key={contractData._id}>
-                    <Link to={"/contract/" + contractData._id}>
-
-
-                      <div className="contract-item-container">
-
-                        <div className="icon-holder">
-                          <div
-                            className="icon"
-                            style={{'backgroundImage': 'url(\'' + contractData.contractOptions.avatarUrl + '\')'}}>
-                          </div>
-                        </div>
-
-                        <div className="feed-title"> {contractData.contractOptions.name}
-                          <small>{insertIntoArray(contractData.words, ' • ')}</small>
-                        </div>
-
-
-                        <div className="contractOptions">
-                          <div>
-                            <div>Pledged</div>
-                            <div style={{color: '#129c17'}}>
-                              ∯ {contractData.contractEscrowBalance}</div>
-                          </div>
-                          <div>
-                            <div>Tokens</div>
-                            <div>{contractData.tokenLedgerCount}</div>
-                          </div>
-                          <div>
-                            <div>Collect</div>
-                            <div style={{color: contractData.contractOptions.ownerCanBurn ? '#129c17' : '#d61717'}}>
-                              {contractData.contractOptions.ownerCanBurn ? '✔' : '✘'}
-                            </div>
-                          </div>
-                          <div>
-                            <div>Spend</div>
-                            <div style={{color: contractData.contractOptions.ownerCanDrain ? '#129c17' : '#d61717'}}>
-                              {contractData.contractOptions.ownerCanDrain ? '✔' : '✘'}
-                            </div>
-                          </div>
-                        </div>
-
-
-                      </div>
-
-                    </Link>
-                  </li>
-
-                )
-              }
-            </ul>
-
-          </div>
-        </div>
       </main>
     )
   }
 }
 
-export default FormComponent
+export default ContractList

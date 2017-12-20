@@ -12,6 +12,16 @@ const config = {
   tokenPriceExponent: 2,
   sunsetWithdrawalPeriod: 5184000 // 2 months
 };
+//
+// ownerAddress,
+// contractName,
+// ownerCanBurn,
+// ownerCanSpend,
+// maxTokens,
+// tokenBasePrice,
+// tokenPriceExponentDivisor,
+// tokenPriceLinearDivisor,
+// sunsetWithdrawPeriod
 
 module.exports = function(deployer, network, accounts) {
   let factory;

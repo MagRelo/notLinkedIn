@@ -1,18 +1,28 @@
 import {sendEvent} from '../analytics/AnalyticsActions'
 import { browserHistory } from 'react-router'
+import bluebird from 'bluebird'
+
+const contract = require('truffle-contract')
 
 import ServesaContract from '../../build/contracts/Servesa.json'
-const contractAddress = ''
-const fromAddress = ''
+import ServesaFactory from '../../build/contracts/ServesaFactory.json'
+const deployedFactoryAddress = '0xf25186b5081ff5ce73482ad761db0eb0d25abfbf'
 
 import store from '../store'
 
 
-// set 'messages.loading' to true
-export const REQUEST_SENT = 'REQUEST_SENT'
-function requestSent() {
+export const LIST_UPDATE = 'LIST_UPDATE'
+function listUpdated(list) {
   return {
-    type: REQUEST_SENT
+    type: LIST_UPDATE,
+    payload: list
+  }
+}
+
+export const CONTRACT_LOADING = 'CONTRACT_LOADING'
+function contractLoading() {
+  return {
+    type: CONTRACT_LOADING
   }
 }
 
@@ -24,21 +34,21 @@ function contractUpdated(contract) {
   }
 }
 
-export const LIST_UPDATE = 'LIST_UPDATE'
-function listUpdated(list) {
+export const REQUEST_SENT = 'REQUEST_SENT'
+function requestSent() {
   return {
-    type: LIST_UPDATE,
-    payload: list
+    type: REQUEST_SENT
   }
 }
 
-export const WORD_UPDATE = 'WORD_UPDATE'
-function wordsUpdated(wordArray) {
-  return {
-    type: WORD_UPDATE,
-    payload: wordArray
+
+export function sendAnalytics(eventType, eventData) {
+  return function(dispatch) {
+    dispatch(sendEvent(eventType, eventData))
   }
 }
+
+
 
 export function searchContracts(term) {
   return function(dispatch) {
@@ -53,9 +63,7 @@ export function searchContracts(term) {
     return fetch('/api/contract/search',
       {
         method: "POST",
-        body: {
-          term: term
-        }
+        body: { term: term }
       }
     ).then(rawResponse => {
         if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
@@ -72,319 +80,275 @@ export function searchContracts(term) {
   }
 }
 
-export function listContracts() {
-  return function(dispatch) {
 
-    // "loading"
-    dispatch(requestSent())
-
-    return fetch('/api/contract/list',
-      {
-        method: "GET"
-      }
-    ).then(rawResponse => {
-        if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
-        return rawResponse.json()
-      }
-    ).then(list => {
-        dispatch(listUpdated(list))
-      }
-    ).catch(error => {
-      console.error('action error', error)
-      return
-    })
-
-  }
-}
-
-export function getContract(contractId) {
-
-  console.log('get contract hit')
-
-  return function(dispatch) {
-
-    // "loading"
-    dispatch(requestSent())
-
-
-
-
-    // return fetch('/api/contract/' + contractId,
-    //   {
-    //     method: "GET"
-    //   }
-    // ).then(rawResponse => {
-    //     if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
-    //     return rawResponse.json()
-    //   }
-    // ).then(contract => {
-    //     dispatch(contractUpdated(contract))
-    //   }
-    // ).catch(error => {
-    //   console.error('action error', error)
-    //   return
-    // })
-
-  }
-}
-
-export function generateWords(){
-  return function(dispatch) {
-
-    dispatch(requestSent())
-
-    return fetch('/api/contract/words',
-      {
-        method: "GET"
-      }
-    ).then(rawResponse => {
-        if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
-        return rawResponse.json()
-      }
-    ).then(wordArray => {
-        dispatch(wordsUpdated(wordArray))
-      }
-    ).catch(error => {
-      console.error('action error', error)
-      return
-    })
-
-  }
-}
-
-
-export function createContract(currentUser, contractOptions) {
+export function getContract(contractAddress) {
   let web3 = store.getState().web3.web3Instance
+  let userAddress = web3.eth.accounts[0]
+
+
+  // Account Data
+  // this.setState({activeAccount: this.props.web3.accounts[0]})
+  // this.state.contractInstance.isFunder(this.props.web3.accounts[0],(error, response) => { this.handleGetterCallback(error, response, 'activeAccountisFunder') })
+  // this.state.contractInstance.getFunderTokens(this.props.web3.accounts[0],(error, response) => { this.handleGetterCallback(error, response, 'activeAccountTokens') })
+  // this.state.contractInstance.getFunderPurchase(this.props.web3.accounts[0],(error, response) => { this.handleGetterCallback(error, response, 'activeAccountPurchse') })
+
+
+  // map contract getter functions to "this.props" fieldnames for convenience on the other side...
+  const getterMap = [
+    {getter: 'getContractBalance', state: 'balance'},
+    {getter: 'getOwner', state: 'owner'},
+    {getter: 'totalCurrentTokens', state: 'tokens'},
+    {getter: 'totalCurrentFunders', state: 'funders'},
+    {getter: 'maxTokens', state: 'maxTokens'},
+    {getter: 'ownerCanBurn', state: 'ownerCanBurn'},
+    {getter: 'ownerCanSpend', state: 'ownerCanDrain'},
+    {getter: 'tokenPriceLinearDivisor', state: 'tokenPriceLinearDivisor'},
+    {getter: 'tokenPriceExponentDivisor', state: 'tokenPriceExponentDivisor'},
+    {getter: 'tokenBasePrice', state: 'tokenBasePrice'},
+    {getter: 'contractName', state: 'contractName'},
+    {getter: 'calculateNextBuyPrice', state: 'buyPrice'},
+    {getter: 'calculateNextSellPrice', state: 'sellPrice'}
+  ]
+
+  let updateObject = {}
+
+  return function(dispatch) {
+
+    // "loading"
+    dispatch(contractLoading())
+
+    const contractInstance = contract({abi: ServesaContract.abi})
+    contractInstance.defaults({from: userAddress})
+    contractInstance.setProvider(web3.currentProvider)
+    contractInstance.at(contractAddress)
+      .then(instance => {
+
+        // create array of getter promises
+        let promiseArray = []
+        getterMap.map(item => {
+          promiseArray.push(instance[item.getter]())
+        })
+
+        if(userAddress){
+          promiseArray.push(instance.getFunderTokens(userAddress))
+          promiseArray.push(instance.getFunderPurchase(userAddress))
+        }
+
+        // execute all getters at once
+        return bluebird.all(promiseArray)
+      })
+      .then(resultArray => {
+
+        if(userAddress){
+          // pop off the last two
+          updateObject.activeAccountPurchase = resultArray.splice(-1,1)[0]
+          updateObject.activeAccountTokens = resultArray.splice(-1,1)[0]
+        }
+
+        // unpack results array into object using getterMap from before
+        resultArray.forEach((result, index) => {
+          updateObject[getterMap[index].state] = result
+        })
+
+        dispatch(contractUpdated(updateObject))
+      })
+      .catch(error => {
+        console.log(error)
+      })
+  }
+}
+
+export function createContract(contractOptions) {
+  let web3 = store.getState().web3.web3Instance
+  let userAddress = web3.eth.accounts[0]
 
   return function(dispatch) {
 
     // "loading" display
     dispatch(requestSent())
+
     // send analytics
     dispatch(sendEvent('create', { 'contractOptions': contractOptions } ))
 
-    if(web3){
+    if(web3 && userAddress){
 
-      const contractInstance = web3.eth.contract(ServesaContract.abi).at('0x40f8Da2C9B078F6693D80BaC02182268E8B1779a')
+      // legacy setting from staketree
+      let sunsetWithdrawPeriod = 10000
 
-      contractInstance.calculateNextBuyPrice((error, response) => {
-        console.log('Next Buy Price:', response.toNumber())
-      })
-      contractInstance.calculateNextSellPrice((error, response) => {
-        console.log('Next Sell Price:', response.toNumber())
-      })
-      contractInstance.totalCurrentTokens((error, response) => {
-        console.log('Tokens:', response.toNumber())
-      })
+      const factoryInstance = contract({abi: ServesaFactory.abi})
+      factoryInstance.setProvider(web3.currentProvider)
+      factoryInstance.defaults({from: userAddress})
+      factoryInstance.at(deployedFactoryAddress)
+        .then(instance => {
+
+          // Create contract on Ethereum
+          return instance.newContract(
+            userAddress,
+            contractOptions.contractName,
+            contractOptions.ownerCanBurn,
+            contractOptions.ownerCanSpend,
+            contractOptions.maxTokens,
+            web3.toWei(contractOptions.tokenBasePrice, 'ether'),
+            contractOptions.tokenPriceExponentDivisor,
+            contractOptions.tokenPriceLinearDivisor,
+            sunsetWithdrawPeriod)
+
+        }).then(result => {
+
+          // Create contract on Servesa search
+          console.log('Contract Address:', result.receipt.logs[0].address)
+
+          return fetch('/api/contract/create',{
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              deployedAddress: result.receipt.logs[0].address,
+              deployedNetwork: "Testing?",
+              contractOptions: contractOptions
+            })
+          })
+
+        }).then(rawResponse => {
+          if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
+          return rawResponse.json()
+        }).then(searchResults => {
+          // Redirect home.
+          return browserHistory.push('/contract/list')
+        }).catch(error => {
+          console.log(error)
+          return browserHistory.push('/contract/list')
+        })
 
     }
 
-
-    // return fetch('/api/contract/create',
-    //   {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       "x-auth-token": currentUser.token
-    //     },
-    //     body: JSON.stringify({
-    //       contractOptions: contractOptions
-    //     })
-    //   })
-    //   .then(rawResponse => {
-    //     if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
-    //     return rawResponse.json()
-    //   })
-    //   .then(contract => {
-    //     dispatch(contractUpdated(contract))
-    //
-    //     // send to profile
-    //     return browserHistory.push('/contract/' + contract._id)
-    //   })
-    //   .catch(error => {
-    //     console.error('action error', error)
-    //     return
-    //   })
-
   }
 }
 
-export function buyTokens(currentUser, targetId, tokensToPurchase, payment) {
+export function buyTokens(contractAddress, payment) {
+  let web3 = store.getState().web3.web3Instance
+  let userAddress = web3.eth.accounts[0]
+
   return function(dispatch) {
 
     // "loading"
     dispatch(requestSent())
-
     // analytics
-    dispatch(sendEvent('buy',
-      {
-        'targetId': targetId,
-        'tokensToPurchase': tokensToPurchase,
-        'payment': payment
-      }
-    ))
+    dispatch(sendEvent('buy', {'payment': payment}))
 
+    const contractInstance = contract({abi: ServesaContract.abi})
+    contractInstance.defaults({from: userAddress})
+    contractInstance.setProvider(web3.currentProvider)
+    contractInstance.at(contractAddress)
+      .then(instance => {
 
-    return fetch('/api/contract/buy',
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-auth-token": currentUser.token
-        },
-        body: JSON.stringify({
-          targetId: targetId,
-          tokensToPurchase: tokensToPurchase,
-          payment: payment
-        })
-      }
-    ).then(rawResponse => {
-        if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
-        return rawResponse.json()
-      }
-    ).then(contract => {
+        return instance.buy({value: payment})
+      })
+      .then(resultArray => {
 
-        dispatch(contractUpdated(contract))
+        console.log(updateObject)
+        // dispatch(contractUpdated(updateObject))
 
-      }
-    ).catch(error => {
-      console.error('action error', error)
-      return
-    })
+      })
+      .catch(error => {
+        console.log(error)
+      })
 
   }
 }
 
-export function sellTokens(currentUser, targetId, tokensToSell) {
+export function sellTokens(contractAddress, tokensToSell) {
+  let web3 = store.getState().web3.web3Instance
+  let userAddress = web3.eth.accounts[0]
+
   return function(dispatch) {
 
     // "loading"
     dispatch(requestSent())
-
     // analytics
-    dispatch(sendEvent('sell',
-      {
-        'targetId': targetId,
-        'tokensToSell': tokensToSell
-      }
-    ))
+    dispatch(sendEvent('sell', {'tokensToSell': tokensToSell}))
 
+    const contractInstance = contract({abi: ServesaContract.abi})
+    contractInstance.defaults({from: userAddress})
+    contractInstance.setProvider(web3.currentProvider)
+    contractInstance.at(contractAddress)
+      .then(instance => {
 
-    return fetch('/api/contract/sell',
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-auth-token": currentUser.token
-        },
-        body: JSON.stringify({
-          targetId: targetId,
-          tokensToSell: tokensToSell
-        })
-      }
-    ).then(rawResponse => {
-        if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
-        return rawResponse.json()
-      }
-    ).then(contract => {
+        return instance.sell({tokenCount: tokensToSell})
+      })
+      .then(resultArray => {
+        console.log(updateObject)
+        // dispatch(contractUpdated(updateObject))
 
-        dispatch(contractUpdated(contract))
-
-      }
-    ).catch(error => {
-      console.error('action error', error)
-      return
-    })
+      })
+      .catch(error => {
+        console.log(error)
+      })
 
   }
 }
 
-export function burnTokens(currentUser, targetContractId, targetUserId, tokensToBurn ) {
+export function burnTokens(contractAddress, targetAddress, tokensToBurn ) {
+  let web3 = store.getState().web3.web3Instance
+  let userAddress = web3.eth.accounts[0]
+
   return function(dispatch) {
 
     // "loading"
     dispatch(requestSent())
-
     // analytics
-    dispatch(sendEvent('burn',
-      {
-        'targetId': targetContractId,
-        'targetUserId': targetUserId,
-        'tokensToBurn': tokensToBurn
-      }
-    ))
+    dispatch(sendEvent('burn', {'targetAddress': targetAddress, 'tokensToBurn': tokensToBurn}))
 
+    const contractInstance = contract({abi: ServesaContract.abi})
+    contractInstance.defaults({from: userAddress})
+    contractInstance.setProvider(web3.currentProvider)
+    contractInstance.at(contractAddress)
+      .then(instance => {
 
-    return fetch('/api/contract/burn',
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-auth-token": currentUser.token
-        },
-        body: JSON.stringify({
-          targetContractId: targetContractId,
-          targetUserId: targetUserId,
-          tokensToBurn: tokensToBurn
-        })
-      }
-    ).then(rawResponse => {
-        if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
-        return rawResponse.json()
-      }
-    ).then(contract => {
+        return instance.burn({'targetAddress': targetAddress, 'tokensToBurn': tokensToBurn})
+      })
+      .then(resultArray => {
+        console.log(updateObject)
+        // dispatch(contractUpdated(updateObject))
 
-        dispatch(contractUpdated(contract))
+      })
+      .catch(error => {
+        console.log(error)
+      })
 
-      }
-    ).catch(error => {
-      console.error('action error', error)
-      return
-    })
 
   }
 }
 
-export function drainEscrow(currentUser, targetId, drainAmount) {
+export function drainEscrow(contractAddress, amount) {
+  let web3 = store.getState().web3.web3Instance
+  let userAddress = web3.eth.accounts[0]
+
   return function(dispatch) {
 
     // "loading"
     dispatch(requestSent())
-
     // analytics
-    dispatch(sendEvent('drain',
-      {
-        'targetId': targetId,
-        'drainAmount': drainAmount
-      }
-    ))
+    dispatch(sendEvent('drain', { 'amount': amount}))
 
+    const contractInstance = contract({abi: ServesaContract.abi})
+    contractInstance.defaults({from: userAddress})
+    contractInstance.setProvider(web3.currentProvider)
+    contractInstance.at(contractAddress)
+      .then(instance => {
 
-    return fetch('/api/contract/drain',
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "x-auth-token": currentUser.token
-        },
-        body: JSON.stringify({
-          targetId: targetId,
-          drainAmount: drainAmount
-        })
-      }
-    ).then(rawResponse => {
-        if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
-        return rawResponse.json()
-      }
-    ).then(contract => {
+        return instance.sell({'amount': amount})
+      })
+      .then(resultArray => {
+        console.log(updateObject)
+        // dispatch(contractUpdated(updateObject))
 
-        dispatch(contractUpdated(contract))
+      })
+      .catch(error => {
+        console.log(error)
+      })
 
-      }
-    ).catch(error => {
-      console.error('action error', error)
-      return
-    })
 
   }
 }

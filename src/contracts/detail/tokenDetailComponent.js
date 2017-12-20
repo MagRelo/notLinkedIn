@@ -64,7 +64,7 @@ class FormComponent extends Component {
   afterOpenModal() {}
   closeModal() { this.setState({modalIsOpen: false})}
 
-  componentWillMount(){
+  componentDidMount(){
 
     fetch("https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=USD")
       .then(res => {return res.json()})
@@ -82,163 +82,40 @@ class FormComponent extends Component {
         });
       });
 
+      // wait for web3 to be injected
+      let intId = 0
       if(this.props.web3.web3Instance){
-        this.loadContract(this.props.contractId)
+        this.props.getContract(this.props.contractId)
       } else {
-        setTimeout(() => {
-          this.loadContract(this.props.contractId)
-        }, 1500)
+        intId = setInterval(watchForWeb3.bind(this), 500)
       }
-
-  }
-
-  loadContract(contractId){
-    let web3 = this.props.web3.web3Instance
-    if(web3){
-      const contractInstance = web3.eth.contract(ServesaContract.abi).at(contractId)
-      this.setState({contractInstance: web3.eth.contract(ServesaContract.abi).at(this.state.contractInstanceAddress)})
-
-      // map getter functions to "this.state" fieldnames
-      const functionArray = [
-        {function: 'getContractBalance', state: 'balance'},
-        {function: 'getOwner', state: 'owner'},
-        {function: 'totalCurrentTokens', state: 'tokens'},
-        {function: 'totalCurrentFunders', state: 'funders'},
-        {function: 'maxTokens', state: 'maxTokens'},
-        {function: 'ownerCanBurn', state: 'ownerCanBurn'},
-        {function: 'ownerCanSpend', state: 'ownerCanDrain'},
-        {function: 'tokenPriceExponent', state: 'tokenPriceExponent'},
-        {function: 'tokenPriceExponentDivisor', state: 'tokenPriceExponentDivisor'},
-        {function: 'tokenBasePrice', state: 'tokenBasePrice'},
-        {function: 'contractName', state: 'contractName'},
-        {function: 'calculateNextBuyPrice', state: 'buyPrice'},
-        {function: 'calculateNextSellPrice', state: 'sellPrice'},
-      ]
-
-      // exectute getter fuctions
-      functionArray.map(item => {
-        this.state.contractInstance[item.function]((error, response) => {this.handleGetterCallback(error, response, item.state)})
-      })
-
-      // account data
-      this.setState({activeAccount: this.props.web3.accounts[0]})
-      this.state.contractInstance.isFunder(this.props.web3.accounts[0],(error, response) => { this.handleGetterCallback(error, response, 'activeAccountisFunder') })
-      this.state.contractInstance.getFunderTokens(this.props.web3.accounts[0],(error, response) => { this.handleGetterCallback(error, response, 'activeAccountTokens') })
-      this.state.contractInstance.getFunderPurchase(this.props.web3.accounts[0],(error, response) => { this.handleGetterCallback(error, response, 'activeAccountPurchse') })
-
-      contractInstance.getOwner((error, response) => {
-        if(error){ return console.log('feildName:', error) }
-        if(response){
-          this.setState({activeAccountIsOwner: response === this.props.web3.accounts[0]})
+      function watchForWeb3(){
+        console.log('watching for web3...')
+        if(this.props.web3.web3Instance){
+          this.props.getContract(this.props.contractId)
+          clearInterval(intId);
         }
-      })
-
-      this.setState({loading: false})
-    } else {
-      console.log('Error: No web3')
-    }
-  }
-
-  handleGetterCallback(error, response, feildName){
-    if(error){
-      return console.log('feildName:', error)
-    }
-
-    if(response){
-      let update = {}
-
-      if(typeof(response) === 'object'){
-        update[feildName + '_big'] = response
-        update[feildName] = response.toNumber()
-      } else {
-        update[feildName] = response
       }
 
-      this.setState(update)
-    }
-
   }
 
-  round(value, places){
-    places = places || 4
-    return +(Math.round(value + "e+" + places)  + "e-" + places);
-  }
-
-  displayWei(wei){
-    return 'Ξ' + this.round(web3.fromWei(wei, 'ether'), 5) + ' ETH ($' +
-     this.round(this.state.exchangeRate * web3.fromWei(wei, 'ether')) + ')'
-  }
-
-  fracExp(k,q,n,p){
-      let s = 0;
-      let N = 1;
-      let B = 1;
-      for (let i = 0; i < p; ++i){
-        s += k * N / B / (q**i);
-        N  = N * (n-i);
-        B  = B * (i+1);
-      }
-      return s;
-    }
-
-  calcPurchasePrice(tokensToPurchase, maxTokens, tokenSupply, tokenBasePrice, exponent, exponentDivisor){
-
-    tokensToPurchase = tokensToPurchase || 0
-    tokensToPurchase = Math.min(tokensToPurchase, maxTokens)
-
-    let totalPurchasePrice = 0
-    let linear = 0
-    let exp = 0
-    let nextTokenPrice = 0
-    for(let i=1; i <= tokensToPurchase; i++){
-      linear = tokenBasePrice * (tokenSupply + i)/1000
-      exp = this.fracExp(tokenBasePrice, exponentDivisor, tokenSupply, 2)
-      nextTokenPrice = exp + linear
-
-      totalPurchasePrice += nextTokenPrice
-    }
-
-    return totalPurchasePrice
-  }
-
-  handleTransactionCallback(error, response, data){
-    if(error){
-      // launch Modal error
-      console.log('error:' ,error)
-    } else {
-
-      // launch Modal success
-      console.log('success:', data.type, response)
-
-      this.setState({
-        transactionType: data.type,
-        transactionId: response
-      })
-
-      this.openModal()
-
-      // clear state
-      this.setState({
-        tokensToPurchase: 0,
-        purchasePrice: 0,
-        tokensToSell: 0,
-        sellTotal: 0,
-        testIdAddress: '' })
-    }
-  }
 
   buyOnChange(event){
     this.setState({
       tokensToPurchase: event.target.value,
-      purchasePrice: this.calcPurchasePrice( event.target.value, this.state.maxTokens - this.state.tokens, this.state.tokens, this.state.tokenBasePrice, this.state.tokenPriceExponent, this.state.tokenPriceExponentDivisor )
+      purchasePrice: this.props.calcPurchasePrice(
+        event.target.value,
+        this.props.contract.maxTokens.toNumber() - this.props.contract.tokens.toNumber(),
+        this.props.contract.tokens.toNumber(),
+        this.props.contract.tokenBasePrice.toNumber(),
+        this.props.contract.tokenPriceLinearDivisor.toNumber(),
+        this.props.contract.tokenPriceExponentDivisor.toNumber())
     })
   }
   buyTokens(event){
     event.preventDefault()
-    this.state.contractInstance.buy({
-        from: this.props.web3.accounts[0],
-        value: Math.ceil(this.state.purchasePrice)
-      }, (error, response) => {this.handleTransactionCallback(error, response, {type: 'buy'})})
+    this.props.buyTokens(this.props.contractId, Math.ceil(this.state.purchasePrice))
+    this.setState({tokensToPurchase: 0})
   }
 
   sellOnChange(event){
@@ -249,30 +126,48 @@ class FormComponent extends Component {
   }
   sellTokens(event){
     event.preventDefault()
-    this.state.contractInstance.sell(this.state.tokensToSell, {
-      from: this.props.web3.accounts[0]
-    }, (error, response) => {this.handleTransactionCallback(error, response, {type: 'sell'})})
-  }
-
-  testAddress(event){
-    event.preventDefault()
-    this.state.contractInstance.isFunder(this.state.testIdAddress, {
-      from: this.props.web3.accounts[0]
-    }, (error, response) => {this.handleTransactionCallback(error, response, {type: 'test'})})
+    this.props.sellTokens(this.props.contractId, this.state.tokensToSell)
   }
 
   burnTokens(event){
     event.preventDefault()
-    this.state.contractInstance.burn(this.state.targetUserId, this.state.tokenCount, {
-      from: this.props.web3.accounts[0]
-    }, (error, response) => {this.handleTransactionCallback(error, response, {type: 'burn'})})
+    this.props.burnTokens(this.props.contractId, this.state.burnCount)
   }
 
   drainEscrow(event){
     event.preventDefault()
-    this.state.contractInstance.spend(this.state.drainAmount, {
-      from: this.props.web3.accounts[0]
-    }, (error, response) => {this.handleTransactionCallback(error, response, {type: 'spend'})})
+    this.props.drainEscrow(this.props.contractId, this.state.drainAmount)
+  }
+
+  round(value, places){
+    places = places || 4
+    return +(Math.round(value + "e+" + places)  + "e-" + places);
+  }
+
+  displayWei(input){
+
+    let ethereum = ''
+    let wei = input
+    if(input){
+
+      if(typeof(input) === 'object'){
+        wei = wei.toNumber()
+      }
+
+      ethereum = this.round(web3.fromWei(wei, 'ether'), 5)
+    }
+
+
+    return 'Ξ' + ethereum + ' ETH ($' +
+     this.round(this.state.exchangeRate * web3.fromWei(wei, 'ether')) + ')'
+  }
+
+  format(input){
+    if(typeof(input) === 'object'){
+      input = input.toNumber()
+    }
+
+    return input
   }
 
   render() {
@@ -280,18 +175,13 @@ class FormComponent extends Component {
 
       <main className="">
 
-        {this.state.loading ?
+        {this.props.contractLoading ?
 
-        <div>
-          <p>Loading:</p>
-          <ul>
-            <li>
-              <p>MetaMask detected: {!!this.props.web3.web3Instance ? 'Yes' : 'No'}</p>
-            </li>
-            <li>
-              <p>MetaMask account detected: {!!this.props.web3.accounts[0] ? 'Yes' : 'No'}</p>
-            </li>
-          </ul>
+        <div style={{textAlign: 'center', marginTop: '10em'}}>
+          <p>MetaMask detected: {!!this.props.web3.web3Instance ? 'Yes' : 'Loading...'}</p>
+          <p>MetaMask account detected: {!!this.props.web3.accounts[0] ? 'Yes' : 'Loading...'}</p>
+          <p>{!this.props.contract ? 'Yes' : 'Loading blockchain data...'}</p>
+          <div className="spinner"></div>
         </div>
 
           :
@@ -299,7 +189,7 @@ class FormComponent extends Component {
         <div>
           <h3>Contract name</h3>
           <div className="pad-box">
-              <h1>{this.state.contractName}</h1>
+              <h1>{this.props.contract.contractName}</h1>
           </div>
 
           <div>
@@ -307,13 +197,14 @@ class FormComponent extends Component {
             <div className="pure-g">
               <div className="pure-u-1 pure-u-md-1-2">
                 <div className="pad-box">
-                  <p>Max tokens: <span>{this.state.maxTokens}</span> </p>
-                  <p>Tokens issued: <span> {this.state.tokens}</span></p>
-                  <p>Token holders: <span>{this.state.funders}</span></p>
-                  <p>Token base price: <span> {this.displayWei(this.state.tokenBasePrice)}</span></p>
-                  <p>Token pricing exponent: <span>{this.state.tokenPriceExponent}</span></p>
-                  <p>Token pricing divisor: <span>{this.state.tokenPriceExponentDivisor}</span></p>
-                  <p>Contact balance: <span>{this.displayWei(this.state.balance)}</span></p>
+                  <p>Contact balance: <span>{this.displayWei(this.props.contract.balance)}</span></p>
+                  <p>Tokens issued: <span> {this.format(this.props.contract.tokens)}</span></p>
+                  <p>Token holders: <span>{this.format(this.props.contract.funders)}</span></p>
+
+                  <p>Max tokens: <span>{this.format(this.props.contract.maxTokens)}</span> </p>
+                  <p>Token base price: <span> {this.displayWei(this.props.contract.tokenBasePrice)}</span></p>
+                  <p>Token pricing linear divisor: <span>{this.format(this.props.contract.tokenPriceLinearDivisor)}</span></p>
+                  <p>Token pricing exponent divisor: <span>{this.format(this.props.contract.tokenPriceExponentDivisor)}</span></p>
                 </div>
               </div>
 
@@ -341,7 +232,7 @@ class FormComponent extends Component {
                   <span>
                     <button
                       className="pure-button pure-button-primary"
-                      onClick={()=>{this.loadContract(this.state.contractInstanceAddress)}}>Refresh Data</button>
+                      onClick={()=>{this.props.getContract(this.props.contractId)}}>Refresh Data</button>
                   </span>
                   </p>
                 </div>
@@ -371,7 +262,7 @@ class FormComponent extends Component {
                   <button
                     type="submit"
                     className="pure-button pure-button-primary"
-                    disabled={this.state.tokensToPurchase < 1 || !this.state.activeAccount}>Buy
+                    disabled={this.state.tokensToPurchase < 1}>Buy
                   </button>
                 </div>
               </form>
@@ -383,11 +274,11 @@ class FormComponent extends Component {
               <form className="pure-form" onSubmit={this.sellTokens.bind(this)}>
                 <fieldset>
                   <p>Sell price: <span>{this.displayWei(this.state.sellPrice)}</span></p>
-                  <label>Tokens to sell (Max:{this.state.activeAccountTokens})</label>
+                  <label>Tokens to sell (Max:{this.props.contract.activeAccountTokens.toNumber()})</label>
                   <input type="text" className="pure-input-1"
                     type="number"
                     value={this.state.tokensToSell}
-                    max={this.state.activeAccountTokens}
+                    max={this.props.contract.activeAccountTokens.toNumber()}
                     min="0"
                     onChange={this.sellOnChange.bind(this)}></input>
                   <p>Total: <span>{this.displayWei(this.state.sellTotal)} </span></p>
@@ -396,33 +287,12 @@ class FormComponent extends Component {
                   <button
                     type="submit"
                     className="pure-button pure-button-primary"
-                    disabled={this.state.tokensToSell < 1 || !this.state.activeAccount}>Sell</button>
+                    disabled={this.state.tokensToSell < 1}>Sell</button>
                 </div>
               </form>
 
             </div>
-            <div className="pure-u-1 pure-u-md-1-2 pad-box">
 
-              <h3>Challenge</h3>
-              <form className="pure-form" onSubmit={this.testAddress.bind(this)}>
-                <fieldset>
-                  <label>Address</label>
-                  <input
-                    className="pure-input-1"
-                    type="text"
-                    value={this.state.testIdAddress}
-                    onChange={(event)=>{this.setState({testIdAddress: event.target.value})}}></input>
-                </fieldset>
-
-                <div style={{textAlign: 'right'}}>
-                  <button
-                    className="pure-button pure-button-primary"
-                    disabled={this.state.testIdAddress == ''}>Test</button>
-                </div>
-
-              </form>
-
-            </div>
           </div>
 
 

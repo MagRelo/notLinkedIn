@@ -46,14 +46,15 @@ class App extends Component {
             </div>
           </div>
 
-          <Link to="/" className="pure-menu-heading pure-menu-link">
-            Servésa</Link>
-          <ul className="pure-menu-list navbar-right">            
+          <Link to="/" className="pure-menu-heading pure-menu-link"> Servésa </Link>
+
+          <ul className="pure-menu-list navbar-right">
             <li className="pure-menu-item">
-              <LoginButtonContainer/>
-            </li>
-            <OnlyGuestLinks />
-            <OnlyAuthLinks />
+              <Link activeStyle={{ color: '#FF5934' }} to="/contract/list" className="pure-menu-link">Market</Link>
+           </li>
+           <li className="pure-menu-item">
+             <Link activeStyle={{ color: '#FF5934' }} to="/contract/add" className="pure-menu-link">+ New</Link>
+          </li>
           </ul>
         </nav>
 

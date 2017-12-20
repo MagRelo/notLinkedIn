@@ -1,27 +1,36 @@
 import { connect } from 'react-redux'
 import tokenDetailComponent from './tokenDetailComponent'
-import { buyTokens, sellTokens, burnTokens, drainEscrow } from '../ContractActions'
+import { buyTokens, sellTokens, burnTokens, drainEscrow, sendAnalytics, getContract} from '../ContractActions'
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    currentUser: state.user.data,
-    web3: state.web3
+    web3: state.web3,
+    contract: state.contracts.contract || {},
+    contractLoading: state.contracts.contractLoading,
+    calcPurchasePrice: state.contracts.calcPurchasePrice  
   }
 }
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    buyTokens: (currentUser, targetId, tokensToPurchase, payment) => {
-      dispatch(buyTokens(currentUser, targetId, tokensToPurchase, payment))
+    sendAnalytics: (eventType, eventData) => {
+      dispatch(sendAnalytics(eventType, eventData))
     },
-    sellTokens: (currentUser, targetId, tokens) => {
-      dispatch(sellTokens(currentUser, targetId, tokens))
+
+    getContract: (contractAddress) => {
+      dispatch(getContract(contractAddress))
     },
-    burnTokens: (currentUser, targetId, targetUserId, tokens) => {
-      dispatch(burnTokens(currentUser, targetId, targetUserId, tokens))
+    buyTokens: (contractAddress, payment) => {
+      dispatch(buyTokens(contractAddress, payment))
     },
-    drainEscrow: (currentUser, targetId, spendAmount) => {
-      dispatch(drainEscrow(currentUser, targetId, spendAmount))
+    sellTokens: (contractAddress, tokensToSell) => {
+      dispatch(sellTokens(contractAddress, tokensToSell))
+    },
+    burnTokens: (contractAddress, targetAddress, tokensToBurn ) => {
+      dispatch(burnTokens(contractAddress, targetAddress, tokensToBurn ))
+    },
+    drainEscrow: (contractAddress, amount) => {
+      dispatch(drainEscrow(contractAddress, amount))
     }
 
   }

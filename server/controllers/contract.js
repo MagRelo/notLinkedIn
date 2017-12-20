@@ -21,7 +21,7 @@ const randomWords = require('random-words');
 
 exports.searchContracts = (request, response) => {
 
-  const searchTerm = request.body.term || 'general'
+  const searchTerm = request.body.term || '*'
 
   // get: user, target, and any existing follows
   return ContractModel.search(
@@ -36,7 +36,9 @@ exports.searchContracts = (request, response) => {
         return response.status(404).json(err)
       }
 
-      return response.json(results)
+      const list = results.hits.hits.map(hit => hit._source)
+
+      return response.json(list)
     }
   )
 
@@ -104,7 +106,7 @@ exports.generateWords = (request, response) => {
       })
   }
 
-  // get: user, target, and any existing follows
+  // find unique set of words
   recursiveSearch(randomWords(3))
     .then((wordArray) => {
       return response.json(wordArray)
@@ -126,11 +128,12 @@ exports.generateWords = (request, response) => {
 // auth
 exports.createContract = (request, response) => {
 
-  const userId = request.auth.id
   const contractOptions = request.body.contractOptions
+  const deployedAddress = request.body.deployedAddress
+  const deployedNetwork = request.body.deployedNetwork
 
   // validate params
-  if(!contractOptions || !userId){
+  if(!contractOptions){
     return response.status(400).json({
       clientError: true,
       status: 400,
@@ -142,20 +145,13 @@ exports.createContract = (request, response) => {
   }
 
   newContract = new ContractModel({
-    owner: userId,
     contractOptions: contractOptions,
-    words: contractOptions.wordArray,
+    deployedAddress: deployedAddress,
+    deployedNetwork: deployedNetwork,
     timestamp: new Date()
   })
 
   newContract.save()
-    .then(contract => {
-      return UserModel.findByIdAndUpdate(
-        {_id: userId},
-        {$push:{contracts: contract._id}},
-        {new: true}
-      )
-    })
     .then(result => response.json(newContract))
     .catch((error) => {
 

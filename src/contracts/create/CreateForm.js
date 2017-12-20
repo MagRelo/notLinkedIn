@@ -1,50 +1,7 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
-import {Tokenizer}  from 'react-typeahead';
 
-const marketOptions = {
-  se: {
-    name: 'simpleEscrow',
-    tokenBasePrice: 10,
-    exponent: 0,
-    exponentDivisor: 1,
-    ownerCanBurn: false,
-    ownerCanDrain: false
-  },
-  cm: {
-    name: 'curationMarket',
-    tokenBasePrice: 10,
-    exponent: 2,
-    exponentDivisor: 10000,
-    ownerCanBurn: false,
-    ownerCanDrain: false
-  },
-  hm: {
-    name: 'hiveMarket',
-    tokenBasePrice: 10,
-    exponent: 2,
-    exponentDivisor: 10000,
-    ownerCanBurn: false,
-    ownerCanDrain: true
-  },
-  tr: {
-    name: 'trustIsRisk',
-    tokenBasePrice: 10,
-    exponent: 0,
-    exponentDivisor: 1,
-    ownerCanBurn: true,
-    ownerCanDrain: false
-  },
-  cr: {
-    name: 'curatedRisk',
-    tokenBasePrice: 10,
-    exponent: 2,
-    exponentDivisor: 10000,
-    ownerCanBurn: true,
-    ownerCanDrain: true
-  }
-}
-
+import Modal from './CreateFormModal'
 
 class CreateContractForm extends Component {
   constructor(props) {
@@ -52,20 +9,28 @@ class CreateContractForm extends Component {
 
     this.state = {
       modalIsOpen: false,
+      exchangeRate: 400,
       name: '',
       avatarUrl: '',
-      wordArray: this.props.searchWords,
-      tokenBasePrice: 10,
-      exponent: 2,
-      exponentDivisor: 10000,
       ownerCanBurn: true,
       ownerCanDrain: true,
-      pricingOption: 'temp_Pricing_flat'
+      pricingOption: 'temp_Pricing_flat',
+      tokenBasePrice: 0.001,
+      maxTokens: 1000,
+      divisor_linear: 1000,
+      divisor_exponent: 10000
     }
   }
 
+
   componentDidMount(){
-    this.props.getSearchWords()
+    fetch("https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=USD")
+      .then(res => {return res.json()})
+      .then(data => {
+        this.setState({
+          exchangeRate: parseInt(data[0].price_usd, 10)
+        });
+      });
   }
 
   // Form functions
@@ -77,24 +42,25 @@ class CreateContractForm extends Component {
   handleSubmit(event) {
     event.preventDefault()
 
+    this.setState({modalIsOpen: true})
+
     const contractObj = {
-      name: this.state.name,
-      avatarUrl: this.state.avatarUrl,
-      wordArray: this.props.searchWords,
+      contractName: this.state.name,
       ownerCanBurn: this.state.ownerCanBurn,
-      ownerCanDrain: this.state.ownerCanDrain,
-      tokenBasePrice: 10,
-      exponent: 2,
-      exponentDivisor: 10000
+      ownerCanSpend: this.state.ownerCanDrain,
+      tokenBasePrice: this.state.tokenBasePrice,
+      maxTokens: this.state.maxTokens,
+      tokenPriceExponentDivisor: this.state.divisor_exponent,
+      tokenPriceLinearDivisor: this.state.divisor_linear,
     }
 
     // flatten pricing curve, if selected
     if(this.state.pricingOption === 'temp_Pricing_flat'){
-      contractObj.exponent = 0
-      contractObj.exponentDivisor = 1
+      contractObj.tokenPriceExponentDivisor = 1
+      contractObj.tokenPriceLinearDivisor = 1
     }
 
-    this.props.submitContract(this.props.currentUser, contractObj)
+    this.props.createContract(contractObj)
   }
 
   handleOptionChange(changeEvent) {
@@ -109,10 +75,35 @@ class CreateContractForm extends Component {
     this.setState({ ownerCanDrain: !this.state.ownerCanDrain })
   }
 
-  getNewSearchPhrase(event){
-    event.preventDefault()
+  round(value, places){
+    places = places || 4
+    return +(Math.round(value + "e+" + places)  + "e-" + places);
+  }
 
-    this.props.getSearchWords()
+  formatEth(ether){
+    return 'Ξ' + this.round(ether, 5) + ' ETH ($' +
+     this.round(this.state.exchangeRate * ether) + ')'
+  }
+
+  calcToken(tokenNumber){
+
+    // check max tokens
+    if(tokenNumber > this.state.maxTokens){
+      return 'n/a'
+    }
+
+    // set pricing option
+    if(this.state.pricingOption === 'temp_Pricing_flat'){
+      return this.state.tokenBasePrice
+    }
+
+    return this.props.calcTokenPrice(
+      tokenNumber,
+      this.state.tokenBasePrice,
+      this.state.divisor_linear,
+      this.state.divisor_exponent
+    )
+
   }
 
   render() {
@@ -120,60 +111,129 @@ class CreateContractForm extends Component {
 
       <div>
 
-        <h2>New Group</h2>
+        <Modal isOpen={this.state.modalIsOpen}/>
+
+        <h2>Create new group</h2>
 
         <form className="pure-form" onSubmit={this.handleSubmit.bind(this)}>
-          <p>Give your group a name, an avatar, and a three-word phrase to help others find your group.</p>
-          <fieldset>
+          <p>Give your group a name and an avatar</p>
 
-            <label>Group Name</label>
-            <input
-              className="pure-input-1"
-              type="text"
-              name="name"
-              value={this.state.name}
-              onChange={this.handleChange.bind(this)}></input>
 
-            <label>Group Avatar (url)</label>
-            <input
-              className="pure-input-1"
-              type="url"
-              name="avatarUrl"
-              value={this.state.avatarUrl}
-              onChange={this.handleChange.bind(this)}></input>
+          <div className="pure-g">
+            <div className="pure-u-1 pad-box">
+              <fieldset>
 
-            <label>Search Phrase</label>
-            <input className="pure-input-1-3" style={{textAlign: 'center'}}type="text" value={this.props.searchWords[0]} readOnly></input>
-            <input className="pure-input-1-3" style={{textAlign: 'center'}}type="text" value={this.props.searchWords[1]} readOnly></input>
-            <input className="pure-input-1-3" style={{textAlign: 'center'}}type="text" value={this.props.searchWords[2]} readOnly></input>
+                <label>Group Name</label>
+                <input
+                  className="pure-input-1"
+                  type="text"
+                  name="name"
+                  value={this.state.name}
+                  onChange={this.handleChange.bind(this)}></input>
 
-            <button
-              className="pure-button pure-button-primary"
-              onClick={this.getNewSearchPhrase.bind(this)}>generate new words</button>
-          </fieldset>
+                <label>Group Avatar (url)</label>
+                <input
+                  className="pure-input-1"
+                  type="url"
+                  name="avatarUrl"
+                  value={this.state.avatarUrl}
+                  onChange={this.handleChange.bind(this)}></input>
+
+                <label>Token Base Price</label>
+                <input
+                  className="pure-input-1-2"
+                  type="number"
+                  name="tokenBasePrice"
+                  value={this.state.tokenBasePrice}
+                  onChange={this.handleChange.bind(this)}></input>
+                <span>{this.formatEth(this.state.tokenBasePrice)}</span>
+
+
+                <label>Max Tokens</label>
+                <input
+                  className="pure-input-1-2"
+                  type="number"
+                  name="maxTokens"
+                  value={this.state.maxTokens}
+                  onChange={this.handleChange.bind(this)}></input>
+
+              </fieldset>
+            </div>
+          </div>
+
 
           <h3>Pledge options</h3>
-          <p>Users will pledge value to the contract and get tokens in return. Use the fields below to adjust the pricing curve for the tokens.  </p>
+          <p>Users will pledge value to the contract and get tokens in return. Use the fields below to adjust the pricing of the tokens.</p>
 
-          <fieldset>
-            <label className="pure-radio">
-              <input
-                type="radio"
-                value="temp_Pricing_flat"
-                checked={this.state.pricingOption === 'temp_Pricing_flat'}
-                onChange={this.handleOptionChange.bind(this)}></input> Flat
-            </label>
-            <label className="pure-radio">
-              <input
-                type="radio"
-                value="temp_Pricing_exp"
-                checked={this.state.pricingOption === 'temp_Pricing_exp'}
-                onChange={this.handleOptionChange.bind(this)}></input> Exponential
-            </label>
-            <label className="pure-radio">
-              <input type="radio" value={false} disabled></input> Custom Pricing Curve (Coming Soon)
-            </label>
-          </fieldset>
+          <div className="pure-g">
+            <div className="pure-u-1 pure-u-lg-1-2 pad-box">
+
+              <fieldset>
+                <label className="pure-radio">
+                  <input
+                    type="radio"
+                    value="temp_Pricing_flat"
+                    checked={this.state.pricingOption === 'temp_Pricing_flat'}
+                    onChange={this.handleOptionChange.bind(this)}></input> Flat Pricing (All tokens at the token base price)
+                </label>
+                <label className="pure-radio">
+                  <input
+                    type="radio"
+                    value="temp_Pricing_exp"
+                    checked={this.state.pricingOption === 'temp_Pricing_exp'}
+                    onChange={this.handleOptionChange.bind(this)}></input> Curation market pricing
+                </label>
+                <label>Linear Divisor</label>
+                <input
+                  className="pure-input-1"
+                  type="number"
+                  name="divisor_linear"
+                  value={this.state.divisor_linear}
+                  disabled={this.state.pricingOption !== 'temp_Pricing_exp'}
+                  onChange={this.handleChange.bind(this)}></input>
+                <label>Exponent Divisor</label>
+                <input
+                  className="pure-input-1"
+                  type="number"
+                  name="divisor_exponent"
+                  value={this.state.divisor_exponent}
+                  disabled={this.state.pricingOption !== 'temp_Pricing_exp'}
+                  onChange={this.handleChange.bind(this)}></input>
+              </fieldset>
+
+            </div>
+            <div className="pure-u-1 pure-u-lg-1-2 pad-box">
+              <table className="pure-table pure-table-horizontal table-100">
+                <thead>
+                  <tr>
+                    <td>Token</td>
+                    <td>Price</td>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>#1</td><td>{this.formatEth(this.calcToken(1)) }</td>
+                  </tr>
+                  <tr>
+                    <td>#10</td><td>{this.formatEth(this.calcToken(10))}</td>
+                  </tr>
+                  <tr>
+                    <td>#100</td><td>{this.formatEth(this.calcToken(100))}</td>
+                  </tr>
+                  <tr>
+                    <td>#1000</td><td>{this.formatEth(this.calcToken(1000))}</td>
+                  </tr>
+                  <tr>
+                    <td>#10000</td><td>{this.formatEth(this.calcToken(10000))}</td>
+                  </tr>
+                </tbody>
+
+              </table>
+
+            </div>
+          </div>
+
+
 
           <h3>Withdraw options</h3>
           <p>If a user chooses to remove their pledge they can turn in their tokens and claim a share of the escrow balance.</p>
