@@ -14,14 +14,12 @@ getWeb3
 
 // Layouts
 import App from './App'
-import Home from './layouts/home/Home'
-import Feed from './layouts/network/NetworkContainer'
-import Profile from './layouts/profile/ProfileContainer'
+import Page404 from  './layouts/errors/404'
 
-import ContractDetail from './layouts/contract/ContractContainer'
 import ContractList from './layouts/contractList/ContractListContainer'
 import ContractCreate from './layouts/contractCreate/ContractContainer'
-import Page404 from  './layouts/errors/404'
+import ContractDetail from './layouts/contractDetail/ContractContainer'
+
 
 // Redux Store
 import store from './store'
@@ -38,7 +36,6 @@ ReactDOM.render((
           <Route path="contract/:contractId" component={ContractDetail} />
 
           <Route path="contracts" component={ContractList} />
-          <Route path="profile" component={UserIsAuthenticated(Profile)} />
           <Route path='*' exact={true} component={Page404} />
         </Route>
       </Router>

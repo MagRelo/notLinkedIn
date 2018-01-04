@@ -1,6 +1,6 @@
 import { connect } from 'react-redux'
 import contractListComponent from './contractListComponent'
-import {searchContracts} from '../ContractActions'
+import {searchContracts, getConfig} from '../ContractActions'
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -12,6 +12,9 @@ const mapDispatchToProps = (dispatch) => {
   return {
     loadList: ()=>{
       dispatch(searchContracts())
+    },
+    loadConfig: ()=>{
+      dispatch(getConfig())
     }
   }
 }

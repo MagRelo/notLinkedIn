@@ -17,11 +17,6 @@ import './App.css'
 import userIcon from './img/User_font_awesome.svg'
 
 
-// UI Components
-import LoginButtonContainer from './user/ui/loginbutton/LoginButtonContainer'
-import LogoutButtonContainer from './user/ui/logoutbutton/LogoutButtonContainer'
-
-
 class App extends Component {
   render() {
     const OnlyAuthLinks = VisibleOnlyAuth(() =>
@@ -50,7 +45,7 @@ class App extends Component {
 
           <ul className="pure-menu-list navbar-right">
             <li className="pure-menu-item">
-              <Link activeStyle={{ color: '#FF5934' }} to="/contract/list" className="pure-menu-link">Market</Link>
+              <Link activeStyle={{ color: '#FF5934' }} to="/contract/list" className="pure-menu-link">List</Link>
            </li>
            <li className="pure-menu-item">
              <Link activeStyle={{ color: '#FF5934' }} to="/contract/add" className="pure-menu-link">+ New</Link>

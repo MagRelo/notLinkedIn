@@ -6,10 +6,16 @@ const contract = require('truffle-contract')
 
 import ServesaContract from '../../build/contracts/Servesa.json'
 import ServesaFactory from '../../build/contracts/ServesaFactory.json'
-const deployedFactoryAddress = '0xf25186b5081ff5ce73482ad761db0eb0d25abfbf'
 
 import store from '../store'
 
+export const CONFIG_UPDATE = 'CONFIG_UPDATE'
+function configUpdated(config) {
+  return {
+    type: CONFIG_UPDATE,
+    payload: config
+  }
+}
 
 export const LIST_UPDATE = 'LIST_UPDATE'
 function listUpdated(list) {
@@ -34,10 +40,18 @@ function contractUpdated(contract) {
   }
 }
 
+
 export const REQUEST_SENT = 'REQUEST_SENT'
 function requestSent() {
   return {
     type: REQUEST_SENT
+  }
+}
+export const REQUEST_RETURN = 'REQUEST_RETURN'
+function requestComplete(result) {
+  return {
+    type: REQUEST_RETURN,
+    payload: result
   }
 }
 
@@ -49,6 +63,24 @@ export function sendAnalytics(eventType, eventData) {
 }
 
 
+export function getConfig(term) {
+  return function(dispatch) {
+
+    return fetch('/api/config')
+      .then(rawResponse => {
+        if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
+        return rawResponse.json()
+      })
+      .then(results => {
+        dispatch(configUpdated(results))
+      })
+      .catch(error => {
+      console.error('action error', error)
+      return
+    })
+
+  }
+}
 
 export function searchContracts(term) {
   return function(dispatch) {
@@ -56,9 +88,7 @@ export function searchContracts(term) {
     // "loading"
     dispatch(requestSent())
 
-    dispatch(sendEvent('search', {
-      term: term
-    }))
+    dispatch(sendEvent('search', { term: term }))
 
     return fetch('/api/contract/search',
       {
@@ -85,14 +115,6 @@ export function getContract(contractAddress) {
   let web3 = store.getState().web3.web3Instance
   let userAddress = web3.eth.accounts[0]
 
-
-  // Account Data
-  // this.setState({activeAccount: this.props.web3.accounts[0]})
-  // this.state.contractInstance.isFunder(this.props.web3.accounts[0],(error, response) => { this.handleGetterCallback(error, response, 'activeAccountisFunder') })
-  // this.state.contractInstance.getFunderTokens(this.props.web3.accounts[0],(error, response) => { this.handleGetterCallback(error, response, 'activeAccountTokens') })
-  // this.state.contractInstance.getFunderPurchase(this.props.web3.accounts[0],(error, response) => { this.handleGetterCallback(error, response, 'activeAccountPurchse') })
-
-
   // map contract getter functions to "this.props" fieldnames for convenience on the other side...
   const getterMap = [
     {getter: 'getContractBalance', state: 'balance'},
@@ -101,11 +123,12 @@ export function getContract(contractAddress) {
     {getter: 'totalCurrentFunders', state: 'funders'},
     {getter: 'maxTokens', state: 'maxTokens'},
     {getter: 'ownerCanBurn', state: 'ownerCanBurn'},
-    {getter: 'ownerCanSpend', state: 'ownerCanDrain'},
+    {getter: 'ownerCanSpend', state: 'ownerCanSpend'},
     {getter: 'tokenPriceLinearDivisor', state: 'tokenPriceLinearDivisor'},
     {getter: 'tokenPriceExponentDivisor', state: 'tokenPriceExponentDivisor'},
     {getter: 'tokenBasePrice', state: 'tokenBasePrice'},
     {getter: 'contractName', state: 'contractName'},
+    {getter: 'contractAvatarUrl', state: 'contractAvatarUrl'},
     {getter: 'calculateNextBuyPrice', state: 'buyPrice'},
     {getter: 'calculateNextSellPrice', state: 'sellPrice'}
   ]
@@ -150,6 +173,9 @@ export function getContract(contractAddress) {
           updateObject[getterMap[index].state] = result
         })
 
+        // check owner
+        updateObject.activeAccountIsOwner = (userAddress === updateObject.owner)
+
         dispatch(contractUpdated(updateObject))
       })
       .catch(error => {
@@ -161,6 +187,7 @@ export function getContract(contractAddress) {
 export function createContract(contractOptions) {
   let web3 = store.getState().web3.web3Instance
   let userAddress = web3.eth.accounts[0]
+  let config = store.getState().contracts.config
 
   return function(dispatch) {
 
@@ -178,13 +205,14 @@ export function createContract(contractOptions) {
       const factoryInstance = contract({abi: ServesaFactory.abi})
       factoryInstance.setProvider(web3.currentProvider)
       factoryInstance.defaults({from: userAddress})
-      factoryInstance.at(deployedFactoryAddress)
+      factoryInstance.at(config.deployedFactoryAddress)
         .then(instance => {
 
           // Create contract on Ethereum
           return instance.newContract(
             userAddress,
             contractOptions.contractName,
+            contractOptions.contractAvatarUrl,
             contractOptions.ownerCanBurn,
             contractOptions.ownerCanSpend,
             contractOptions.maxTokens,
@@ -217,7 +245,7 @@ export function createContract(contractOptions) {
           // Redirect home.
           return browserHistory.push('/contract/list')
         }).catch(error => {
-          console.log(error)
+          console.log(error.message)
           return browserHistory.push('/contract/list')
         })
 
@@ -242,17 +270,17 @@ export function buyTokens(contractAddress, payment) {
     contractInstance.setProvider(web3.currentProvider)
     contractInstance.at(contractAddress)
       .then(instance => {
-
         return instance.buy({value: payment})
       })
-      .then(resultArray => {
-
-        console.log(updateObject)
-        // dispatch(contractUpdated(updateObject))
-
+      .then(result => {
+        result.inError = false
+        console.log(result)
+        dispatch(requestComplete(result))
       })
       .catch(error => {
+        error.inError = true
         console.log(error)
+        dispatch(requestComplete(error))
       })
 
   }
@@ -274,16 +302,17 @@ export function sellTokens(contractAddress, tokensToSell) {
     contractInstance.setProvider(web3.currentProvider)
     contractInstance.at(contractAddress)
       .then(instance => {
-
-        return instance.sell({tokenCount: tokensToSell})
+        return instance.sell(parseInt(tokensToSell, 10))
       })
-      .then(resultArray => {
-        console.log(updateObject)
-        // dispatch(contractUpdated(updateObject))
-
+      .then(result => {
+        result.inError = false
+        console.log(result)
+        dispatch(requestComplete(result))
       })
       .catch(error => {
+        error.inError = true
         console.log(error)
+        dispatch(requestComplete(error))
       })
 
   }
@@ -305,16 +334,17 @@ export function burnTokens(contractAddress, targetAddress, tokensToBurn ) {
     contractInstance.setProvider(web3.currentProvider)
     contractInstance.at(contractAddress)
       .then(instance => {
-
-        return instance.burn({'targetAddress': targetAddress, 'tokensToBurn': tokensToBurn})
+        return instance.burn(targetAddress, parseInt(tokensToBurn, 10))
       })
-      .then(resultArray => {
-        console.log(updateObject)
-        // dispatch(contractUpdated(updateObject))
-
+      .then(result => {
+        result.inError = false
+        console.log(result)
+        dispatch(requestComplete(result))
       })
       .catch(error => {
+        error.inError = true
         console.log(error)
+        dispatch(requestComplete(error))
       })
 
 
@@ -338,17 +368,18 @@ export function drainEscrow(contractAddress, amount) {
     contractInstance.at(contractAddress)
       .then(instance => {
 
-        return instance.sell({'amount': amount})
+        return instance.sell(parseInt(amount, 10))
       })
-      .then(resultArray => {
-        console.log(updateObject)
-        // dispatch(contractUpdated(updateObject))
-
+      .then(result => {
+        result.inError = false
+        console.log(result)
+        dispatch(requestComplete(result))
       })
       .catch(error => {
+        error.inError = true
         console.log(error)
+        dispatch(requestComplete(error))
       })
-
 
   }
 }

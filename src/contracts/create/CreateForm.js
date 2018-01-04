@@ -16,7 +16,7 @@ class CreateContractForm extends Component {
       ownerCanDrain: true,
       pricingOption: 'temp_Pricing_flat',
       tokenBasePrice: 0.001,
-      maxTokens: 1000,
+      maxTokens: 10000,
       divisor_linear: 1000,
       divisor_exponent: 10000
     }
@@ -31,6 +31,8 @@ class CreateContractForm extends Component {
           exchangeRate: parseInt(data[0].price_usd, 10)
         });
       });
+
+      this.props.loadConfig()
   }
 
   // Form functions
@@ -46,6 +48,7 @@ class CreateContractForm extends Component {
 
     const contractObj = {
       contractName: this.state.name,
+      contractAvatarUrl: this.state.avatarUrl,
       ownerCanBurn: this.state.ownerCanBurn,
       ownerCanSpend: this.state.ownerCanDrain,
       tokenBasePrice: this.state.tokenBasePrice,
@@ -139,6 +142,19 @@ class CreateContractForm extends Component {
                   value={this.state.avatarUrl}
                   onChange={this.handleChange.bind(this)}></input>
 
+              </fieldset>
+            </div>
+          </div>
+
+
+          <h3>Pricing Options</h3>
+          <p>Users will pledge value to the contract and get tokens in return. Use the fields below to adjust the pricing of the tokens.</p>
+
+          <div className="pure-g">
+            <div className="pure-u-1 pure-u-lg-1-2 pad-box">
+
+              <fieldset>
+
                 <label>Token Base Price</label>
                 <input
                   className="pure-input-1-2"
@@ -157,18 +173,6 @@ class CreateContractForm extends Component {
                   value={this.state.maxTokens}
                   onChange={this.handleChange.bind(this)}></input>
 
-              </fieldset>
-            </div>
-          </div>
-
-
-          <h3>Pledge options</h3>
-          <p>Users will pledge value to the contract and get tokens in return. Use the fields below to adjust the pricing of the tokens.</p>
-
-          <div className="pure-g">
-            <div className="pure-u-1 pure-u-lg-1-2 pad-box">
-
-              <fieldset>
                 <label className="pure-radio">
                   <input
                     type="radio"
@@ -283,26 +287,3 @@ class CreateContractForm extends Component {
 }
 
 export default CreateContractForm
-
-
-// <fieldset>
-//   <p>A simple escrow contract: what you put in you can take out.</p>
-//   <button className="pure-button pure-button-primary" name="se" onClick={this.handleSubmit.bind(this)}>Simple escrow</button>
-// </fieldset>
-// <fieldset>
-//   <p>Curation markets introduce an accelerating pricing curve to incentivize early adoptors.</p>
-//   <button className="pure-button pure-button-primary" name="cm" onClick={this.handleSubmit.bind(this)}>Curation Market</button>
-// </fieldset>
-// <fieldset>
-//   <p>Hive Commons markets are a curation market that allow the contract owner to withdraw funds from escrow.
-//     This can be used to fund a charitable cause or provide on-going support for a project.</p>
-//   <button className="pure-button pure-button-primary" name="hm" onClick={this.handleSubmit.bind(this)}>Hive Market</button>
-// </fieldset>
-// <fieldset>
-//   <p>Trust is risk allows the contract owner to delete your tokens. This can be used to prove that you trust the owner.</p>
-//   <button className="pure-button pure-button-primary" name="tr" onClick={this.handleSubmit.bind(this)}>Trust is Risk</button>
-// </fieldset>
-// <fieldset>
-//   <p>Curated trust combines a curation market with Trust is Risk: the earlier you trust someone the less it costs.</p>
-//   <button className="pure-button pure-button-primary" name="cr" onClick={this.handleSubmit.bind(this)}>Curated Risk</button>
-// </fieldset>

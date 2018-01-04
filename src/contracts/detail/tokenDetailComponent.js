@@ -1,57 +1,28 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
 
-import Modal from 'react-modal';
-const customStyles = {
-  overlay: {
-   backgroundColor   : 'rgba(16, 58, 82, 0.75)'
-  },
-  content : {
-    top                   : '50%',
-    left                  : '50%',
-    right                 : 'auto',
-    bottom                : 'auto',
-    marginRight           : '-40%',
-    transform             : 'translate(-50%, -50%)',
-    padding               : 'none'
-  }
-};
+import WrappedModal from './confirmationModal'
 
-
-import ServesaContract from '../../../build/contracts/Servesa.json'
 
 class FormComponent extends Component {
-  constructor(props, { authData }) {
+  constructor(props) {
     super(props)
-    authData = this.props
     this.state = {
       modalIsOpen: false,
       loading: true,
       exchangeRate: 0,
       balance: 0,
       tokens: 0,
-      owner: 0x0,
-      maxTokens: 1000,
-      ownerCanBurn : false,
-      ownerCanDrain: false,
-      tokenBasePrice: 0,
-      tokenPriceExponent: 0,
-      tokenPriceExponentDivisor: 0,
       buyPrice: 0,
       sellPrice: 0,
       contractInstanceAddress: this.props.contractId,
-      contractInstance: null,
-      activeAccount: null,
-      activeAccountIsOwner: false,
-      activeAccountTokens: false,
       burnCount: 0,
       burnAddress: '',
       drainAmount: 0,
       tokensToPurchase: 0,
       purchasePrice: 0,
       tokensToSell: 0,
-      history: [],
-      testIdAddress: ''
+      history: []
     }
 
     this.openModal = this.openModal.bind(this);
@@ -114,6 +85,7 @@ class FormComponent extends Component {
   }
   buyTokens(event){
     event.preventDefault()
+    this.openModal()
     this.props.buyTokens(this.props.contractId, Math.ceil(this.state.purchasePrice))
     this.setState({tokensToPurchase: 0})
   }
@@ -126,16 +98,19 @@ class FormComponent extends Component {
   }
   sellTokens(event){
     event.preventDefault()
+    this.openModal()
     this.props.sellTokens(this.props.contractId, this.state.tokensToSell)
   }
 
   burnTokens(event){
     event.preventDefault()
+    this.openModal()
     this.props.burnTokens(this.props.contractId, this.state.burnCount)
   }
 
   drainEscrow(event){
     event.preventDefault()
+    this.openModal()
     this.props.drainEscrow(this.props.contractId, this.state.drainAmount)
   }
 
@@ -177,12 +152,12 @@ class FormComponent extends Component {
 
         {this.props.contractLoading ?
 
-        <div style={{textAlign: 'center', marginTop: '10em'}}>
-          <p>MetaMask detected: {!!this.props.web3.web3Instance ? 'Yes' : 'Loading...'}</p>
-          <p>MetaMask account detected: {!!this.props.web3.accounts[0] ? 'Yes' : 'Loading...'}</p>
-          <p>{!this.props.contract ? 'Yes' : 'Loading blockchain data...'}</p>
-          <div className="spinner"></div>
-        </div>
+            <div style={{textAlign: 'center', marginTop: '10em'}}>
+              <p>MetaMask detected: {!!this.props.web3.web3Instance ? 'Yes' : 'Loading...'}</p>
+              <p>MetaMask account detected: {!!this.props.web3.accounts[0] ? 'Yes' : 'Loading...'}</p>
+              <p>{!this.props.contract ? 'Yes' : 'Loading blockchain data...'}</p>
+              <div className="spinner"></div>
+            </div>
 
           :
 
@@ -213,17 +188,17 @@ class FormComponent extends Component {
                   <p>Contract owner: &nbsp;
                     <span>
                       <a className="pure-link-primary"
-                        href={"https://rinkeby.etherscan.io/address/" + this.state.owner}
+                        href={"https://rinkeby.etherscan.io/address/" + this.props.contract.owner}
                         target="_blank">View Owner Account
                       </a>
                     </span>
                   </p>
-                  <p>Owner can burn: <span>{this.state.ownerCanBurn ? 'Yes': 'No'}</span></p>
-                  <p>Owner can drain: <span>{this.state.ownerCanDrain ? 'Yes': 'No'}</span></p>
+                  <p>Owner can burn: <span>{this.props.contract.ownerCanBurn ? 'Yes': 'No'}</span></p>
+                  <p>Owner can drain: <span>{this.props.contract.ownerCanDrain ? 'Yes': 'No'}</span></p>
                   <p>Etherscan: &nbsp;
                     <span>
                       <a className="pure-link-primary"
-                        href={"https://rinkeby.etherscan.io/address/" + this.state.contractInstanceAddress}
+                        href={"https://rinkeby.etherscan.io/address/" + this.props.contract.contractId}
                         target="_blank">View Contract
                       </a>
                     </span>
@@ -232,7 +207,7 @@ class FormComponent extends Component {
                   <span>
                     <button
                       className="pure-button pure-button-primary"
-                      onClick={()=>{this.props.getContract(this.props.contractId)}}>Refresh Data</button>
+                      onClick={()=>{this.props.getContract(this.props.contract.contractId)}}>Refresh Data</button>
                   </span>
                   </p>
                 </div>
@@ -253,7 +228,7 @@ class FormComponent extends Component {
                     className="pure-input-1"
                     type="number"
                     value={this.state.tokensToPurchase}
-                    max={this.state.maxTokens - this.state.tokens}
+                    max={this.props.contract.maxTokens - this.props.contract.tokens}
                     min="0"
                     onChange={this.buyOnChange.bind(this)}></input>
                   <p>Total: <span>{this.displayWei(this.state.purchasePrice)} </span></p>
@@ -274,7 +249,7 @@ class FormComponent extends Component {
               <form className="pure-form" onSubmit={this.sellTokens.bind(this)}>
                 <fieldset>
                   <p>Sell price: <span>{this.displayWei(this.state.sellPrice)}</span></p>
-                  <label>Tokens to sell (Max:{this.props.contract.activeAccountTokens.toNumber()})</label>
+                  <label>Tokens to sell (Max:{this.format(this.props.contract.activeAccountTokens)})</label>
                   <input type="text" className="pure-input-1"
                     type="number"
                     value={this.state.tokensToSell}
@@ -297,7 +272,7 @@ class FormComponent extends Component {
 
 
 
-          {!this.state.activeAccountIsOwner ? null :
+          {!this.props.contract.activeAccountIsOwner ? null :
           <div className="pure-g">
             <div className="pure-u-1 pure-u-md-1-2 pad-box">
 
@@ -370,40 +345,11 @@ class FormComponent extends Component {
           </table>
         </div>
 
-        <Modal
-          isOpen={this.state.modalIsOpen}
+        <WrappedModal
+          modalIsOpen={this.state.modalIsOpen}
           onAfterOpen={this.afterOpenModal}
-          onRequestClose={this.closeModal}
-          style={customStyles}
-          contentLabel="">
-
-            <div className="confirm-container">
-
-              <div className="confirm-title-container">
-                <span className="title">Transaction: {this.state.transactionType} </span>
-              </div>
-
-              <div className="confirm-body-container">
-
-                <p>Your transaction has been successfully submitted. Transactions typically take about 45 seconds to be confirmed.</p>
-                <p>You can view this transaction on Etherscan: &nbsp;
-                  <span>
-                    <a className="pure-link-primary"
-                      href={"https://rinkeby.etherscan.io/tx/" + this.state.transactionId}
-                      target="_blank">View Transaction</a>
-                  </span>
-                </p>
-                <p>After the transaction has been confirmed you can refresh the contract to see the updated contract data.</p>
-
-                <div style={{textAlign: 'right'}}>
-                  <button className="pure-button pure-button-primary"
-                    onClick={this.closeModal.bind(this)}>OK
-                  </button>
-                </div>
-
-              </div>
-            </div>
-          </Modal>
+          closeModal={this.closeModal}
+          transactionPending={this.props.transactionPending}/>
 
       </div>
 

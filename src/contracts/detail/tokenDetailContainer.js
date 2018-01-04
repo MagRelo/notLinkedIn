@@ -7,7 +7,10 @@ const mapStateToProps = (state, ownProps) => {
     web3: state.web3,
     contract: state.contracts.contract || {},
     contractLoading: state.contracts.contractLoading,
-    calcPurchasePrice: state.contracts.calcPurchasePrice  
+    transactionPending: state.contracts.transactionPending,
+    transactionError: state.contracts.transactionError,
+    transactionID: state.contracts.transactionID,
+    calcPurchasePrice: state.contracts.calcPurchasePrice
   }
 }
 
@@ -16,7 +19,6 @@ const mapDispatchToProps = (dispatch) => {
     sendAnalytics: (eventType, eventData) => {
       dispatch(sendAnalytics(eventType, eventData))
     },
-
     getContract: (contractAddress) => {
       dispatch(getContract(contractAddress))
     },

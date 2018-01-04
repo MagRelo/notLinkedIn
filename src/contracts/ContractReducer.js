@@ -1,9 +1,11 @@
 const initialState = {
+  config: null,
+  transactionPending: false,
+  transactionError: null,
+  transactionID: '',
   list: [],
   contractLoading: true,
   contract: {},
-  transactionLoading: false,
-  transactionError: false,
   calcTokenPrice(tokenNumber, tokenBasePrice, linearDivisor, exponentDivisor){
 
     function fracExp(k,q,n,p){
@@ -45,6 +47,10 @@ const initialState = {
     tokensToPurchase = tokensToPurchase || 0
     tokensToPurchase = Math.min(tokensToPurchase, maxTokens)
 
+    if(linearDivisor === 1){
+      return tokenBasePrice * tokensToPurchase
+    }
+
     let totalPurchasePrice = 0
     let linear = 0
     let exp = 0
@@ -66,15 +72,30 @@ const contractReducer = (state = initialState, action) => {
   if (action.type === 'REQUEST_SENT')
   {
     return Object.assign({}, state, {
-      transactionLoading: true
+      transactionPending: true,
+      transactionResult: null
     })
   }
+  if (action.type === 'REQUEST_RETURN'){
+    return Object.assign({}, state, {
+      transactionPending: false,
+      transactionError: action.payload.inError,
+      transactionID: action.payload.tx
+    })
+  }
+
   if (action.type === 'LIST_UPDATE')
   {
     return Object.assign({}, state, {
       contract: null,
-      contractLoading: false,
+      contractLoading: true,
       list: action.payload
+    })
+  }
+  if (action.type === 'CONFIG_UPDATE')
+  {
+    return Object.assign({}, state, {
+      config: action.payload
     })
   }
   if (action.type === 'CONTRACT_UPDATE')

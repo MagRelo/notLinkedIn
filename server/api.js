@@ -1,9 +1,6 @@
 /**
  * Main application routes
  */
-
-
-
 const authController = require('./controllers/auth')
 const userController = require('./controllers/user')
 const messageController = require('./controllers/message')
@@ -13,13 +10,10 @@ const analyticsController = require('./controllers/analytics')
 const passport = require('passport')
 const jwt = require('jsonwebtoken')
 const expressJwt = require('express-jwt')
-
 var path = require('path');
-
 //setup configuration for twitter login
 var passportConfig = require('./config/passport');
 passportConfig();
-
 
 var getOne = function (req, res) {
   var user = req.user.toObject();
@@ -33,74 +27,14 @@ var getOne = function (req, res) {
 
 module.exports = function(app) {
 
-  // TWITTER LOGIN
-  // app.post('/api/v1/auth/twitter/reverse', authController.getTwitterRequestToken)
-  // app.get('/auth/twitter', [
-  //   authController.twitterLogin,
-  //   passport.authenticate('twitter-token', {session: false}),
-  //   function(req, res, next) {
-  //       if (!req.user) { return res.send(401, 'User Not Authenticated'); }
-  //       req.auth = { id: req.user.id }
-  //       return next();
-  //     },
-  //   authController.generateToken,
-  //   authController.sendToken
-  // ])
-  //
-  // app.post('/auth/twitter', [
-  //   authController.twitterLogin,
-  //   passport.authenticate('twitter-token', {session: false}),
-  //   function(req, res, next) {
-  //       if (!req.user) { return res.send(401, 'User Not Authenticated'); }
-  //       req.auth = { id: req.user.id }
-  //       return next();
-  //     },
-  //   authController.generateToken,
-  //   authController.sendToken
-  // ])
-
-
-  // USERS
-  // app.post('/api/user/list', userController.listUsers);
-  // app.post('/api/user/create', userController.saveUser);
-
+  app.get('/api/config', (req, res)=> {
+    const factoryAddress = process.env.FACTORY_ADDRESS || '0x345ca3e014aaf5dca488057592ee47305d9b3e10'
+    res.json({deployedFactoryAddress: factoryAddress})
+  });
 
   // CONTRACTS AUTH
-  app.post('/api/contract/create', contractController.createContract);
-  // app.put('/api/contract/buy', [
-  //   authController.authenticate,
-  //   contractController.buyTokens
-  // ]);
-  // app.put('/api/contract/sell', [
-  //   authController.authenticate,
-  //   contractController.sellTokens
-  // ]);
-  // app.put('/api/contract/burn', [
-  //   authController.authenticate,
-  //   contractController.burnTokens
-  // ]);
-  // app.put('/api/contract/drain', [
-  //   authController.authenticate,
-  //   contractController.drainEscrow
-  // ]);
-
-  // CONTRACTS PUBLIC
   app.post('/api/contract/search', contractController.searchContracts);
-
-  // app.get('/api/contract/list', contractController.listContracts);
-  // app.get('/api/contract/words', contractController.generateWords);
-  // app.get('/api/contract/:contractId', contractController.getContract);
-
-
-  // *FOLLOW*
-  // app.post('/api/follow', userController.purchaseTokens);
-  // app.delete('/api/follow', userController.sellTokens);
-
-  // * MESSAGES*
-  // app.get('/api/messages/:userId', messageController.getMessagesByUser);
-  // app.get('/api/timeline/:userId', messageController.getTimelineByUser);
-  // app.post('/api/messages', messageController.saveMessage);
-
+  app.post('/api/contract/create', contractController.createContract);
 
   // *ANALYTICS*
   app.post('/api/analytics/send', analyticsController.sendEvent);

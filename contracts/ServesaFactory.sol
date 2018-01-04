@@ -8,6 +8,7 @@ contract ServesaFactory {
   function newContract(
     address ownerAddress,
     string contractName,
+    string contractAvatarUrl,
     bool ownerCanBurn,
     bool ownerCanSpend,
     uint maxTokens,
@@ -19,6 +20,7 @@ contract ServesaFactory {
     Servesa contractId = new Servesa(
       ownerAddress,
       contractName,
+      contractAvatarUrl,
       ownerCanBurn,
       ownerCanSpend,
       maxTokens,

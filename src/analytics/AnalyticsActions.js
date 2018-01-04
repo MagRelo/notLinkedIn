@@ -11,7 +11,7 @@ export function sendEvent(type, eventData) {
 
   return function(dispatch) {
 
-    if(ga){
+    if(window.ga){
       ga('send', {
         hitType: 'event',
         eventCategory: 'Contract',

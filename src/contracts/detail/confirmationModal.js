@@ -1,3 +1,6 @@
+import React, { Component } from 'react'
+import { Link } from 'react-router'
+
 import Modal from 'react-modal';
 const customStyles = {
   overlay: {
@@ -14,50 +17,65 @@ const customStyles = {
   }
 };
 
-class ComposeMessage extends Component {
+class WrappedModal extends Component {
   constructor(props, { authData }) {
     super(props)
     authData = this.props
-
-    this.state = {
-      modalIsOpen: false,
-      text: 'intitial text'
-    };
-
-    this.openModal = this.openModal.bind(this);
-    this.afterOpenModal = this.afterOpenModal.bind(this);
-    this.closeModal = this.closeModal.bind(this);
   }
-
-  // Modal functions
-  openModal() { this.setState({modalIsOpen: true})}
-  afterOpenModal() {}
-  closeModal() { this.setState({modalIsOpen: false})}
 
   render() {
     return(
-        <Modal
-          isOpen={this.state.modalIsOpen}
-          onAfterOpen={this.afterOpenModal}
-          onRequestClose={this.closeModal}
-          style={customStyles}
-          contentLabel="">
 
-            <div className="compose-container">
+      <Modal
+        isOpen={this.props.modalIsOpen}
+        onAfterOpen={this.props.afterOpenModal}
+        onRequestClose={this.props.closeModal}
+        style={customStyles}
+        contentLabel="">
 
-              <div className="compose-title-container">
-                <span className="title">Trasaction Submitted</span>
-              </div>
+          <div className="confirm-container">
 
-              <div className="compose-editor-container">
-
-                <p>Your tranaction has been submitted.</p>
-              </div>
+            <div className="confirm-title-container">
+              <span className="title">Transaction</span>
             </div>
-          </Modal>
+
+            <div className="confirm-body-container">
+
+              {this.props.transactionPending ?
+
+                <div>
+                  <p>Handing off to Web3 provider...</p>
+                  <div className="spinner"></div>
+                </div>
+
+              :
+
+                <div>
+                  <p>Your transaction has been successfully submitted. Transactions typically take about 45 seconds to be confirmed.</p>
+                  <p>You can view this transaction on Etherscan: &nbsp;
+                    <span>
+                      <a className="pure-link-primary"
+                        href={"https://rinkeby.etherscan.io/tx/" + this.props.transactionID}
+                        target="_blank">View Transaction</a>
+                    </span>
+                  </p>
+                  <p>After the transaction has been confirmed you can refresh the contract to see the updated contract data.</p>
+                </div>
+
+              }
+
+              <div style={{textAlign: 'right'}}>
+                <button className="pure-button pure-button-primary"
+                  onClick={this.props.closeModal}>OK
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </Modal>
 
     )
   }
-
-
 }
+
+export default WrappedModal

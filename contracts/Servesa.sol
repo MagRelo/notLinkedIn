@@ -24,6 +24,7 @@ contract Servesa {
 
   address owner;
   string public contractName;
+  string public contractAvatarUrl;
   bool public ownerCanBurn = false;
   bool public ownerCanSpend = false;
   uint public maxTokens = 1000;
@@ -43,6 +44,7 @@ contract Servesa {
   function Servesa (
     address ownerAddress,
     string contractNameInit,
+    string contractAvatarUrlInit,
     bool ownerCanBurnInit,
     bool ownerCanSpendInit,
     uint maxTokensInit,
@@ -53,6 +55,7 @@ contract Servesa {
 
     owner = ownerAddress;
     contractName = contractNameInit;
+    contractAvatarUrl = contractAvatarUrlInit;
     ownerCanBurn = ownerCanBurnInit;
     ownerCanSpend = ownerCanSpendInit;
     maxTokens = maxTokensInit;
@@ -104,7 +107,7 @@ contract Servesa {
   }
 
   /*
-  * External accounts can pay directly to contract to fund it.
+  * External accounts can pay directly to contract - bonus!
   */
   function () payable public {
     FallbackEvent(msg.sender, msg.value);
@@ -137,7 +140,7 @@ contract Servesa {
         nextTokenPrice = calculateNextBuyPrice();
     }
 
-    // check that sender sent enough to purchase at least one token
+    // check that sender sent enough value to purchase at least one token
     require(tokensToPurchase > 0);
 
     // Update funders array
