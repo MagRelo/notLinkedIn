@@ -207,7 +207,7 @@ class FormComponent extends Component {
                   <span>
                     <button
                       className="pure-button pure-button-primary"
-                      onClick={()=>{this.props.getContract(this.props.contract.contractId)}}>Refresh Data</button>
+                      onClick={()=>{this.props.getContract(this.props.contractId)}}>Refresh Data</button>
                   </span>
                   </p>
                 </div>
