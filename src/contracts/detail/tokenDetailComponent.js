@@ -198,7 +198,7 @@ class FormComponent extends Component {
                   <p>Etherscan: &nbsp;
                     <span>
                       <a className="pure-link-primary"
-                        href={"https://rinkeby.etherscan.io/address/" + this.props.contract.contractId}
+                        href={"https://rinkeby.etherscan.io/address/" + this.props.contractId}
                         target="_blank">View Contract
                       </a>
                     </span>
@@ -349,7 +349,8 @@ class FormComponent extends Component {
           modalIsOpen={this.state.modalIsOpen}
           onAfterOpen={this.afterOpenModal}
           closeModal={this.closeModal}
-          transactionPending={this.props.transactionPending}/>
+          transactionPending={this.props.transactionPending}
+          transactionID={this.props.transactionID}/>
 
       </div>
 

@@ -51,7 +51,7 @@ class WrappedModal extends Component {
               :
 
                 <div>
-                  <p>Your transaction has been successfully submitted. Transactions typically take about 45 seconds to be confirmed.</p>
+                  <p>Success!</p>
                   <p>You can view this transaction on Etherscan: &nbsp;
                     <span>
                       <a className="pure-link-primary"
