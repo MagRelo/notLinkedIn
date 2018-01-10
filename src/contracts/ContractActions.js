@@ -189,6 +189,8 @@ export function createContract(contractOptions) {
   let userAddress = web3.eth.accounts[0]
   let config = store.getState().contracts.config
 
+  let web3Result = null
+
   return function(dispatch) {
 
     // "loading" display
@@ -223,6 +225,8 @@ export function createContract(contractOptions) {
 
         }).then(result => {
 
+          web3Result = result
+
           // Create contract on Servesa search
           console.log('Contract Address:', result.receipt.logs[0].address)
 
@@ -241,12 +245,16 @@ export function createContract(contractOptions) {
         }).then(rawResponse => {
           if(rawResponse.status !== 200){ throw new Error(rawResponse.text) }
           return rawResponse.json()
-        }).then(searchResults => {
-          // Redirect home.
-          return browserHistory.push('/contract/list')
-        }).catch(error => {
-          console.log(error.message)
-          return browserHistory.push('/contract/list')
+        })
+        .then(result => {
+          result.inError = false
+          console.log(web3Result)
+          dispatch(requestComplete(web3Result))
+        })
+        .catch(error => {
+          error.inError = true
+          console.log(web3Result)
+          dispatch(requestComplete(web3Result))
         })
 
     }

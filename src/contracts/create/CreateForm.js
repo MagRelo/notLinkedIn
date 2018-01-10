@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
 
-import Modal from './CreateFormModal'
+import WrappedModal from '../confirmationModal'
 
 class CreateContractForm extends Component {
   constructor(props) {
@@ -20,8 +20,16 @@ class CreateContractForm extends Component {
       divisor_linear: 1000,
       divisor_exponent: 10000
     }
+
+    this.openModal = this.openModal.bind(this);
+    this.afterOpenModal = this.afterOpenModal.bind(this);
+    this.closeModal = this.closeModal.bind(this);
   }
 
+  // Modal functions
+  openModal() { this.setState({modalIsOpen: true})}
+  afterOpenModal() {}
+  closeModal() { this.setState({modalIsOpen: false})}
 
   componentDidMount(){
     fetch("https://api.coinmarketcap.com/v1/ticker/ethereum/?convert=USD")
@@ -44,7 +52,7 @@ class CreateContractForm extends Component {
   handleSubmit(event) {
     event.preventDefault()
 
-    this.setState({modalIsOpen: true})
+    this.openModal()
 
     const contractObj = {
       contractName: this.state.name,
@@ -113,9 +121,6 @@ class CreateContractForm extends Component {
     return(
 
       <div>
-
-        <Modal isOpen={this.state.modalIsOpen}/>
-
         <h2>Create new group</h2>
 
         <form className="pure-form" onSubmit={this.handleSubmit.bind(this)}>
@@ -278,6 +283,14 @@ class CreateContractForm extends Component {
             onClick={this.openModal}> + Add contract
           </button>
         </form>
+
+
+        <WrappedModal
+          modalIsOpen={this.state.modalIsOpen}
+          onAfterOpen={this.afterOpenModal}
+          closeModal={this.closeModal}
+          transactionPending={this.props.transactionPending}
+          transactionID={this.props.transactionID}/>
 
       </div>
 
