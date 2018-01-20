@@ -6,7 +6,6 @@ const contract = require('truffle-contract')
 
 import ServesaContract from '../../build/contracts/Servesa.json'
 import ServesaFactory from '../../build/contracts/ServesaFactory.json'
-
 import store from '../store'
 
 export const CONFIG_UPDATE = 'CONFIG_UPDATE'
@@ -41,19 +40,35 @@ function contractUpdated(contract) {
 }
 
 
+// Web 3 handoff UX
 export const REQUEST_SENT = 'REQUEST_SENT'
 function requestSent() {
   return {
     type: REQUEST_SENT
   }
 }
-export const REQUEST_RETURN = 'REQUEST_RETURN'
-function requestComplete(result) {
+export const CONTRACT_CREATED = 'CONTRACT_CREATED'
+function contractCreated(result) {
   return {
-    type: REQUEST_RETURN,
+    type: CONTRACT_CREATED,
     payload: result
   }
 }
+export const TRANSACTION_SUCCESS = 'TRANSACTION_SUCCESS'
+function transactionSuccess(result) {
+  return {
+    type: TRANSACTION_SUCCESS,
+    payload: result
+  }
+}
+export const REQUEST_ERROR = 'REQUEST_ERROR'
+function requestError(result) {
+  return {
+    type: REQUEST_ERROR,
+    payload: result
+  }
+}
+
 
 
 export function sendAnalytics(eventType, eventData) {
@@ -61,8 +76,6 @@ export function sendAnalytics(eventType, eventData) {
     dispatch(sendEvent(eventType, eventData))
   }
 }
-
-
 export function getConfig(term) {
   return function(dispatch) {
 
@@ -81,7 +94,6 @@ export function getConfig(term) {
 
   }
 }
-
 export function searchContracts(term) {
   return function(dispatch) {
 
@@ -109,7 +121,6 @@ export function searchContracts(term) {
 
   }
 }
-
 
 export function getContract(contractAddress) {
   let web3 = store.getState().web3.web3Instance
@@ -248,13 +259,15 @@ export function createContract(contractOptions) {
         })
         .then(result => {
           result.inError = false
+
+          // return web3 reponse, not Servesa server response
           console.log(web3Result)
-          dispatch(requestComplete(web3Result))
+          dispatch(contractCreated(web3Result))
         })
         .catch(error => {
           error.inError = true
-          console.log(web3Result)
-          dispatch(requestComplete(web3Result))
+          console.log(error)
+          dispatch(requestError(error))
         })
 
     }
@@ -281,14 +294,12 @@ export function buyTokens(contractAddress, payment) {
         return instance.buy({value: payment})
       })
       .then(result => {
-        result.inError = false
         console.log(result)
-        dispatch(requestComplete(result))
+        dispatch(transactionSuccess(result))
       })
       .catch(error => {
-        error.inError = true
         console.log(error)
-        dispatch(requestComplete(error))
+        dispatch(requestError(error))
       })
 
   }
@@ -313,14 +324,12 @@ export function sellTokens(contractAddress, tokensToSell) {
         return instance.sell(parseInt(tokensToSell, 10))
       })
       .then(result => {
-        result.inError = false
         console.log(result)
-        dispatch(requestComplete(result))
+        dispatch(transactionSuccess(result))
       })
       .catch(error => {
-        error.inError = true
         console.log(error)
-        dispatch(requestComplete(error))
+        dispatch(requestError(error))
       })
 
   }
@@ -345,14 +354,12 @@ export function burnTokens(contractAddress, targetAddress, tokensToBurn ) {
         return instance.burn(targetAddress, parseInt(tokensToBurn, 10))
       })
       .then(result => {
-        result.inError = false
         console.log(result)
-        dispatch(requestComplete(result))
+        dispatch(transactionSuccess(result))
       })
       .catch(error => {
-        error.inError = true
         console.log(error)
-        dispatch(requestComplete(error))
+        dispatch(requestError(error))
       })
 
 
@@ -379,14 +386,12 @@ export function drainEscrow(contractAddress, amount) {
         return instance.sell(parseInt(amount, 10))
       })
       .then(result => {
-        result.inError = false
         console.log(result)
-        dispatch(requestComplete(result))
+        dispatch(transactionSuccess(result))
       })
       .catch(error => {
-        error.inError = true
         console.log(error)
-        dispatch(requestComplete(error))
+        dispatch(requestError(error))
       })
 
   }

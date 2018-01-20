@@ -1,5 +1,6 @@
 const initialState = {
   config: null,
+  transactionMessage: '',
   transactionPending: false,
   transactionError: null,
   transactionID: '',
@@ -76,10 +77,27 @@ const contractReducer = (state = initialState, action) => {
       transactionResult: null
     })
   }
-  if (action.type === 'REQUEST_RETURN'){
+
+  if (action.type === 'REQUEST_ERROR'){
     return Object.assign({}, state, {
       transactionPending: false,
-      transactionError: action.payload.inError,
+      transactionError: true,
+      transactionMessage: action.payload.message
+    })
+  }
+  if (action.type === 'CONTRACT_CREATED'){
+    return Object.assign({}, state, {
+      transactionPending: false,
+      transactionError: false,
+      contractNetwork: action.payload.contractOptions,
+      contractAddress: action.payload.deployedAddress,      
+      contractOptions: action.payload.contractOptions,
+    })
+  }
+  if (action.type === 'TRANSACTION_SUCCESS'){
+    return Object.assign({}, state, {
+      transactionPending: false,
+      transactionError: false,
       transactionID: action.payload.tx
     })
   }

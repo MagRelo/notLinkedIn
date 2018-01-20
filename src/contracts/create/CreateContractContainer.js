@@ -4,6 +4,9 @@ import { createContract, getConfig} from '../ContractActions'
 
 const mapStateToProps = (state, ownProps) => {
   return {
+    transactionPending: state.contracts.transactionPending,
+    transactionError: state.contracts.transactionError,
+    transactionID: state.contracts.transactionID,
     calcTokenPrice: state.contracts.calcTokenPrice
   }
 }
