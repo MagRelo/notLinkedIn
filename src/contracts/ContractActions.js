@@ -151,10 +151,10 @@ export function getContract(contractAddress) {
     // "loading"
     dispatch(contractLoading())
 
-    const contractInstance = contract({abi: ServesaContract.abi})
-    contractInstance.defaults({from: userAddress})
-    contractInstance.setProvider(web3.currentProvider)
-    contractInstance.at(contractAddress)
+    const groupContract = contract({abi: ServesaContract.abi})
+    groupContract.defaults({from: userAddress})
+    groupContract.setProvider(web3.currentProvider)
+    groupContract.at(contractAddress)
       .then(instance => {
 
         // create array of getter promises
@@ -215,10 +215,10 @@ export function createContract(contractOptions) {
       // legacy setting from staketree
       let sunsetWithdrawPeriod = 10000
 
-      const factoryInstance = contract({abi: ServesaFactory.abi})
-      factoryInstance.setProvider(web3.currentProvider)
-      factoryInstance.defaults({from: userAddress})
-      factoryInstance.at(config.deployedFactoryAddress)
+      const factoryContract = contract({abi: ServesaFactory.abi})
+      factoryContract.setProvider(web3.currentProvider)
+      factoryContract.defaults({from: userAddress})
+      factoryContract.at(config.deployedFactoryAddress)
         .then(instance => {
 
           // Create contract on Ethereum
@@ -265,7 +265,6 @@ export function createContract(contractOptions) {
           dispatch(contractCreated(web3Result))
         })
         .catch(error => {
-          error.inError = true
           console.log(error)
           dispatch(requestError(error))
         })
@@ -286,10 +285,10 @@ export function buyTokens(contractAddress, payment) {
     // analytics
     dispatch(sendEvent('buy', {'payment': payment}))
 
-    const contractInstance = contract({abi: ServesaContract.abi})
-    contractInstance.defaults({from: userAddress})
-    contractInstance.setProvider(web3.currentProvider)
-    contractInstance.at(contractAddress)
+    const groupContract = contract({abi: ServesaContract.abi})
+    groupContract.defaults({from: userAddress})
+    groupContract.setProvider(web3.currentProvider)
+    groupContract.at(contractAddress)
       .then(instance => {
         return instance.buy({value: payment})
       })
@@ -316,10 +315,10 @@ export function sellTokens(contractAddress, tokensToSell) {
     // analytics
     dispatch(sendEvent('sell', {'tokensToSell': tokensToSell}))
 
-    const contractInstance = contract({abi: ServesaContract.abi})
-    contractInstance.defaults({from: userAddress})
-    contractInstance.setProvider(web3.currentProvider)
-    contractInstance.at(contractAddress)
+    const groupContract = contract({abi: ServesaContract.abi})
+    groupContract.defaults({from: userAddress})
+    groupContract.setProvider(web3.currentProvider)
+    groupContract.at(contractAddress)
       .then(instance => {
         return instance.sell(parseInt(tokensToSell, 10))
       })
@@ -346,10 +345,10 @@ export function burnTokens(contractAddress, targetAddress, tokensToBurn ) {
     // analytics
     dispatch(sendEvent('burn', {'targetAddress': targetAddress, 'tokensToBurn': tokensToBurn}))
 
-    const contractInstance = contract({abi: ServesaContract.abi})
-    contractInstance.defaults({from: userAddress})
-    contractInstance.setProvider(web3.currentProvider)
-    contractInstance.at(contractAddress)
+    const groupContract = contract({abi: ServesaContract.abi})
+    groupContract.defaults({from: userAddress})
+    groupContract.setProvider(web3.currentProvider)
+    groupContract.at(contractAddress)
       .then(instance => {
         return instance.burn(targetAddress, parseInt(tokensToBurn, 10))
       })
@@ -377,10 +376,10 @@ export function drainEscrow(contractAddress, amount) {
     // analytics
     dispatch(sendEvent('drain', { 'amount': amount}))
 
-    const contractInstance = contract({abi: ServesaContract.abi})
-    contractInstance.defaults({from: userAddress})
-    contractInstance.setProvider(web3.currentProvider)
-    contractInstance.at(contractAddress)
+    const groupContract = contract({abi: ServesaContract.abi})
+    groupContract.defaults({from: userAddress})
+    groupContract.setProvider(web3.currentProvider)
+    groupContract.at(contractAddress)
       .then(instance => {
 
         return instance.sell(parseInt(amount, 10))

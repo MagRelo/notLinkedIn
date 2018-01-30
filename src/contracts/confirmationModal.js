@@ -47,6 +47,7 @@ class WrappedModal extends Component {
                   <p>Handing off to Web3 provider...</p>
                   <div className="spinner"></div>
                 </div>
+
               :null}
 
               {!this.props.transactionPending && this.props.transactionError ?
@@ -55,21 +56,23 @@ class WrappedModal extends Component {
                   <p>Error!</p>
                   <p>{this.props.transactionMessage}</p>
                 </div>
+
               :null}
 
               {!this.props.transactionPending && !this.props.transactionError ?
 
-              <div>
-                <p>Success!</p>
-                <p>You can view this transaction on Etherscan: &nbsp;
-                  <span>
-                    <a className="pure-link-primary"
-                      href={"https://rinkeby.etherscan.io/tx/" + this.props.transactionID}
-                      target="_blank">View Transaction</a>
-                  </span>
-                </p>
-                <p>After the transaction has been confirmed you can refresh the contract to see the updated contract data.</p>
-              </div>
+                <div>
+                  <p>Success!</p>
+                  <p>You can view this transaction on Etherscan: &nbsp;
+                    <span>
+                      <a className="pure-link-primary"
+                        href={"https://rinkeby.etherscan.io/tx/" + this.props.transactionID}
+                        target="_blank">View Transaction</a>
+                    </span>
+                  </p>
+                  <p>After the transaction has been confirmed you can refresh the contract to see the updated contract data.</p>
+                </div>
+
               :null}
 
               <div style={{textAlign: 'right'}}>

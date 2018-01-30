@@ -7,65 +7,8 @@ const initialState = {
   list: [],
   contractLoading: true,
   contract: {},
-  calcTokenPrice(tokenNumber, tokenBasePrice, linearDivisor, exponentDivisor){
-
-    function fracExp(k,q,n,p){
-      let s = 0;
-      let N = 1;
-      let B = 1;
-      for (let i = 0; i < p; ++i){
-        s += k * N / B / (q**i);
-        N  = N * (n-i);
-        B  = B * (i+1);
-      }
-      return s;
-    }
-
-    if(linearDivisor === 1){
-      return tokenBasePrice
-    }
-
-    let linear = tokenBasePrice * tokenNumber/linearDivisor
-    let exp = fracExp(tokenBasePrice, exponentDivisor, tokenNumber, 2)
-    let nextTokenPrice = exp + linear
-
-    return nextTokenPrice
-  },
-  calcPurchasePrice(tokensToPurchase, maxTokens, tokenSupply, tokenBasePrice, linearDivisor, exponentDivisor){
-
-    function fracExp(k,q,n,p){
-      let s = 0;
-      let N = 1;
-      let B = 1;
-      for (let i = 0; i < p; ++i){
-        s += k * N / B / (q**i);
-        N  = N * (n-i);
-        B  = B * (i+1);
-      }
-      return s;
-    }
-
-    tokensToPurchase = tokensToPurchase || 0
-    tokensToPurchase = Math.min(tokensToPurchase, maxTokens)
-
-    if(linearDivisor === 1){
-      return tokenBasePrice * tokensToPurchase
-    }
-
-    let totalPurchasePrice = 0
-    let linear = 0
-    let exp = 0
-    let nextTokenPrice = 0
-    for(let i=1; i <= tokensToPurchase; i++){
-      linear = tokenBasePrice * (tokenSupply + i)/linearDivisor
-      exp = fracExp(tokenBasePrice, exponentDivisor, tokenSupply, 2)
-      nextTokenPrice = exp + linear
-
-      totalPurchasePrice += nextTokenPrice
-    }
-
-    return totalPurchasePrice
-  }
+  calcTokenPrice: calcTokenPrice,
+  calcPurchasePrice: calcPurchasePrice
 }
 
 const contractReducer = (state = initialState, action) => {
@@ -89,8 +32,7 @@ const contractReducer = (state = initialState, action) => {
     return Object.assign({}, state, {
       transactionPending: false,
       transactionError: false,
-      contractNetwork: action.payload.contractOptions,
-      contractAddress: action.payload.deployedAddress,      
+      contractAddress: action.payload.deployedAddress,
       contractOptions: action.payload.contractOptions,
     })
   }
@@ -130,8 +72,68 @@ const contractReducer = (state = initialState, action) => {
     })
   }
 
-
   return state
+}
+
+function calcPurchasePrice(tokensToPurchase, maxTokens, tokenSupply, tokenBasePrice, linearDivisor, exponentDivisor){
+
+  function fracExp(k,q,n,p){
+    let s = 0;
+    let N = 1;
+    let B = 1;
+    for (let i = 0; i < p; ++i){
+      s += k * N / B / (q**i);
+      N  = N * (n-i);
+      B  = B * (i+1);
+    }
+    return s;
+  }
+
+  tokensToPurchase = tokensToPurchase || 0
+  tokensToPurchase = Math.min(tokensToPurchase, maxTokens)
+
+  if(linearDivisor === 1){
+    return tokenBasePrice * tokensToPurchase
+  }
+
+  let totalPurchasePrice = 0
+  let linear = 0
+  let exp = 0
+  let nextTokenPrice = 0
+  for(let i=1; i <= tokensToPurchase; i++){
+    linear = tokenBasePrice * (tokenSupply + i)/linearDivisor
+    exp = fracExp(tokenBasePrice, exponentDivisor, tokenSupply, 2)
+    nextTokenPrice = exp + linear
+
+    totalPurchasePrice += nextTokenPrice
+  }
+
+  return totalPurchasePrice
+}
+
+function calcTokenPrice(tokenNumber, tokenBasePrice, linearDivisor, exponentDivisor){
+
+  function fracExp(k,q,n,p){
+    let s = 0;
+    let N = 1;
+    let B = 1;
+    for (let i = 0; i < p; ++i){
+      s += k * N / B / (q**i);
+      N  = N * (n-i);
+      B  = B * (i+1);
+    }
+    return s;
+  }
+
+  if(linearDivisor === 1){
+    return tokenBasePrice
+  }
+
+  let linear = tokenBasePrice * tokenNumber/linearDivisor
+  let exp = fracExp(tokenBasePrice, exponentDivisor, tokenNumber, 2)
+  let nextTokenPrice = exp + linear
+
+  return nextTokenPrice
 }
 
 export default contractReducer
