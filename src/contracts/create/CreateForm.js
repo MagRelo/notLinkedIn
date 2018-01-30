@@ -120,7 +120,7 @@ class CreateContractForm extends Component {
   render() {
     return(
 
-      <div>
+      <div style={{marginTop: '1em'}}>
         <h2>Create new group</h2>
 
         <form className="pure-form" onSubmit={this.handleSubmit.bind(this)}>

@@ -61,10 +61,11 @@ class FormComponent extends Component {
         intId = setInterval(watchForWeb3.bind(this), 500)
       }
       function watchForWeb3(){
-        console.log('watching for web3...')
         if(this.props.web3.web3Instance){
           this.props.getContract(this.props.contractId)
           clearInterval(intId);
+        } else {
+          console.log('watching for web3...')
         }
       }
 

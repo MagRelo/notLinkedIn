@@ -14,16 +14,6 @@ import SpendForm from './spendForm'
 import store from '../../store'
 import ServesaContract from '../../../build/contracts/Servesa.json'
 
-const insertIntoArray = (arr, value) => {
-    return arr.reduce((result, element, index, array) => {
-        result.push(element);
-        if (index < array.length - 1) {
-            result.push(value);
-        }
-        return result;
-    }, []);
-};
-
 class FormComponent extends Component {
   constructor(props, { authData }) {
     super(props)
@@ -31,9 +21,6 @@ class FormComponent extends Component {
     this.state = {
       contractInstanceAddress: '0x40f8Da2C9B078F6693D80BaC02182268E8B1779a'
     }
-  }
-
-  componentWillMount(){
   }
 
   render() {

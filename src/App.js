@@ -45,6 +45,9 @@ class App extends Component {
 
           <ul className="pure-menu-list navbar-right">
             <li className="pure-menu-item">
+              <Link activeStyle={{ color: '#FF5934' }} to="/tourney" className="pure-menu-link">Tourney</Link>
+           </li>
+            <li className="pure-menu-item">
               <Link activeStyle={{ color: '#FF5934' }} to="/contract/list" className="pure-menu-link">List</Link>
            </li>
            <li className="pure-menu-item">
@@ -53,7 +56,19 @@ class App extends Component {
           </ul>
         </nav>
 
-        {this.props.children}
+        <div className="container">
+          <div className="pure-g">
+            <div className="pure-u-1 pure-u-lg-1-6"></div>
+            <div className="pure-u-1 pure-u-lg-2-3">
+
+
+              {this.props.children}
+
+            </div>
+          </div>
+        </div>
+
+
       </div>
     );
   }

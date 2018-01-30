@@ -17,6 +17,7 @@ class ContractList extends Component {
   render() {
     return(
       <main className="pure-g">
+        <h1>Groups</h1>
 
         {this.props.list.map(contract => {
 

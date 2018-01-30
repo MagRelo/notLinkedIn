@@ -14,11 +14,13 @@ getWeb3
 
 // Layouts
 import App from './App'
-import Page404 from  './layouts/errors/404'
+import Page404 from  './errors/404'
 
-import ContractList from './layouts/contractList/ContractListContainer'
-import ContractCreate from './layouts/contractCreate/ContractContainer'
-import ContractDetail from './layouts/contractDetail/ContractContainer'
+import ContractList from './contracts/list/contractListContainer'
+import ContractCreate from './contracts/create/CreateContractContainer'
+import ContractDetail from './contracts/detail/tokenDetailContainer'
+
+// import TourneyHome from './layouts/contractDetail/ContractContainer'
 
 
 // Redux Store
@@ -34,6 +36,8 @@ ReactDOM.render((
           <Route path="contract/add" component={ContractCreate} />
           <Route path="contract/list" component={ContractList} />
           <Route path="contract/:contractId" component={ContractDetail} />
+
+          <Route path="tourney" component={ContractDetail} />
 
           <Route path="contracts" component={ContractList} />
           <Route path='*' exact={true} component={Page404} />
