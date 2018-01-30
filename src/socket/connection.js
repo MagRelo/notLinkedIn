@@ -17,7 +17,9 @@ function reducer(state = {}, action){
 let store = applyMiddleware(socketIoMiddleware)(createStore)(reducer);
 
 store.subscribe(()=>{
-  console.log('new client state', store.getState());
+  console.log('the server says:', store.getState());
 });
 
-store.dispatch({type:'server/hello', data:'Hello!'});
+console.log('the client says:', 'What day is it?' );
+
+store.dispatch({type:'server/hello', data:'What day is it?'});

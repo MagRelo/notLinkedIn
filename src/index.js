@@ -12,7 +12,7 @@ getWeb3
   .then(() => { console.log('Web3 initialized!') })
   .catch(() => { console.log('Error in web3 initialization.') })
 
-import socket from './socket/connection' 
+import socket from './socket/connection'
 
 // Layouts
 import App from './App'
@@ -22,7 +22,7 @@ import ContractList from './contracts/list/contractListContainer'
 import ContractCreate from './contracts/create/CreateContractContainer'
 import ContractDetail from './contracts/detail/tokenDetailContainer'
 
-// import TourneyHome from './layouts/contractDetail/ContractContainer'
+import TourneyHome from './tourney/detail/tourneyDetailContainer'
 
 
 // Redux Store
@@ -39,7 +39,7 @@ ReactDOM.render((
           <Route path="contract/list" component={ContractList} />
           <Route path="contract/:contractId" component={ContractDetail} />
 
-          <Route path="tourney" component={ContractDetail} />
+          <Route path="tourney" component={TourneyHome} />
 
           <Route path="contracts" component={ContractList} />
           <Route path='*' exact={true} component={Page404} />
