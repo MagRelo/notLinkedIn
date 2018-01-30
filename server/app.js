@@ -72,57 +72,58 @@ app.use(morgan('dev', {
 }));
 
 
-// Express session management
-var store = new MongoDBStore(
-  {
-    uri: process.env.MONGODB_URL_INT || 'mongodb://127.0.0.1:27017/session_store',
-    collection: 'mySessions'
-  }
-);
-store.on('error', function(error) {
-  assert.ifError(error);
-  assert.ok(false);
-});
 
-const sessionOptions = {
-  secret: 'keyboard cat',
-  cookie: {},
-  store: store,
-  resave: true,
-  saveUninitialized: true
-}
-if (app.get('env') === 'production') {
-  app.set('trust proxy', 1) // trust first proxy
-  sessionOptions.cookie.secure = true // serve secure cookies
-}
-app.use(session(sessionOptions));
+// Express session management
+// var store = new MongoDBStore(
+//   {
+//     uri: process.env.MONGODB_URL_INT || 'mongodb://127.0.0.1:27017/session_store',
+//     collection: 'mySessions'
+//   }
+// );
+// store.on('error', function(error) {
+//   assert.ifError(error);
+//   assert.ok(false);
+// });
+
+// const sessionOptions = {
+//   secret: 'keyboard cat',
+//   cookie: {},
+//   store: store,
+//   resave: true,
+//   saveUninitialized: true
+// }
+// if (app.get('env') === 'production') {
+//   app.set('trust proxy', 1) // trust first proxy
+//   sessionOptions.cookie.secure = true // serve secure cookies
+// }
+// app.use(session(sessionOptions));
 
 // Passport session management
-app.use(passport.initialize());
-app.use(passport.session());
-passport.use(new TwitterTokenStrategy({
-    consumerKey: config.twitterConsumerKey,
-    consumerSecret: config.twitterSecret,
-    includeEmail: true,
-    includeStatus: true,
-    includeEntities: true
-  },
-  function (token, tokenSecret, profile, done) {
-    User.upsertTwitterUser(token, tokenSecret, profile, function(err, user) {
-      return done(err, user);
-    });
-  }));
-passport.serializeUser(function(user, done) {
-  console.log('serializing user: ');
-  console.log(user);
-  done(null, user._id);
-});
-passport.deserializeUser(function(id, done) {
-  user.findById(id, function(err, user) {
-    console.log('no im not serial');
-    done(err, user);
-  });
-});
+// app.use(passport.initialize());
+// app.use(passport.session());
+// passport.use(new TwitterTokenStrategy({
+//     consumerKey: config.twitterConsumerKey,
+//     consumerSecret: config.twitterSecret,
+//     includeEmail: true,
+//     includeStatus: true,
+//     includeEntities: true
+//   },
+//   function (token, tokenSecret, profile, done) {
+//     User.upsertTwitterUser(token, tokenSecret, profile, function(err, user) {
+//       return done(err, user);
+//     });
+//   }));
+// passport.serializeUser(function(user, done) {
+//   console.log('serializing user: ');
+//   console.log(user);
+//   done(null, user._id);
+// });
+// passport.deserializeUser(function(id, done) {
+//   user.findById(id, function(err, user) {
+//     console.log('no im not serial');
+//     done(err, user);
+//   });
+// });
 
 // API ROUTING
 require('./api')(app);
@@ -130,3 +131,21 @@ require('./api')(app);
 app.listen(8080, function () {
   console.log('App running on port 8080')
 })
+
+
+
+var http = require('http');
+var server = http.createServer();
+var socket_io = require('socket.io');
+server.listen(8081);
+var io = socket_io();
+io.attach(server);
+io.on('connection', function(socket){
+  console.log("Socket connected: " + socket.id);
+  socket.on('action', (action) => {
+    if(action.type === 'server/hello'){
+      console.log('Got hello data!', action.data);
+      socket.emit('action', {type:'message', data:'good day!'});
+    }
+  });
+});
