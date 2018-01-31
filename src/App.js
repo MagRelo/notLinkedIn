@@ -57,15 +57,7 @@ class App extends Component {
         </nav>
 
         <div className="container">
-          <div className="pure-g">
-            <div className="pure-u-1 pure-u-lg-1-6"></div>
-            <div className="pure-u-1 pure-u-lg-2-3">
-
-
-              {this.props.children}
-
-            </div>
-          </div>
+          {this.props.children}
         </div>
 
 

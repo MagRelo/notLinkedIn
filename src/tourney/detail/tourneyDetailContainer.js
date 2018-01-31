@@ -1,5 +1,5 @@
 import { connect } from 'react-redux'
-import tokenDetailComponent from './tourneyDetailComponent'
+import tokenDetailComponent from './tourneyDetailComponent_2'
 // import { buyTokens, sellTokens, burnTokens, drainEscrow, sendAnalytics, getContract} from '../ContractActions'
 
 const mapStateToProps = (state, ownProps) => {

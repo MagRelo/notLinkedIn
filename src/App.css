@@ -13,7 +13,6 @@ toape? - FAE7C7
 */
 
 html{
-    height: 100%;
 
     /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#177b9f+0,175772+100 */
     background: #177b9f; /* Old browsers */
@@ -23,11 +22,24 @@ html{
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#177b9f', endColorstr='#175772',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
 }
 
+html, body, #root, .App, .container, main{
+  height: 100%;
+}
+
 body,
 .pure-g [class*=pure-u] {
   font-family: 'Barlow', sans-serif;
   color: #eceeef;
+  height: 100%;
 }
+
+.container {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 49px 30px 30px 30px;
+}
+
+
 
 h1{
   color: #eceeef;
@@ -67,6 +79,14 @@ hr{
 .pad-box > form > fieldset > p > span {
   float: right;
   color: white;
+}
+
+
+.game-panel{
+  margin: 0.5em;
+  padding: 1em;
+  border: 1px solid white;
+  overflow: scroll;
 }
 
 /*LEGIT*/
@@ -193,12 +213,6 @@ hr{
   text-align: right;
 }
 
-.container {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 45px 20px;
-}
-
 /*Buttons*/
 a.pure-button-primary,
 .pure-button-primary {
@@ -240,6 +254,11 @@ a.pure-link-primary:visited{
 
 .pure-table > tbody{
   text-align: center;
+}
+
+.pure-table-horizontal td,
+.pure-table-horizontal th {
+  border-bottom: 1px solid #103A52;
 }
 
 .pure-form{

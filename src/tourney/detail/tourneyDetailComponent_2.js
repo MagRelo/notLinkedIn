@@ -84,12 +84,79 @@ class FormComponent extends Component {
   render() {
     return(
 
-      <main className="">
+      <main style={{display: 'flex', flexDirection: 'column'}}>
 
-        <h2>Tournament Progress</h2>
-        <div className="pure-g">
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
+        <div style={{flex: '1', display: 'flex', flexDirection: 'row'}}>
 
+          <div style={{flex: '4', display: 'flex', flexDirection: 'column'}}>
+
+            <div className="game-panel" style={{flex: '5'}}>
+
+              <h3> Submit a proposal </h3>
+              <div style={{display: 'flex', flexDirection: 'row'}}>
+                <div style={{flex: '1'}}><button className="pure-button pure-button-primary">Add</button></div>
+                <div style={{flex: '1'}}><button className="pure-button pure-button-primary">Remove</button></div>
+                <div style={{flex: '1'}}><button className="pure-button pure-button-primary">Pass</button></div>
+              </div>
+
+              <h3> Proposals </h3>
+              <div style={{marginLeft: '1em'}}>
+                <table className="pure-table pure-table-horizontal table-100">
+                  <thead>
+                    <tr>
+                      <td>Name</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                    {this.state.rounds[1].proposal.map( item =>{
+                      return <tr key={item.hash}>
+                          <td>{item.name}</td>
+                      </tr>
+                    })}
+
+                  </tbody>
+                </table>
+              </div>
+
+              <h3> Vote </h3>
+              <p> Remove "NEO" </p>
+              <div style={{display: 'flex'}}>
+                <button style={{flex: '1 1 auto'}} className="pure-button pure-button-primary"> Yes </button>
+                <button style={{flex: '1 1 auto'}} className="pure-button pure-button-primary"> No </button>
+              </div>
+              <button className="pure-button pure-button-primary"> Confirm </button>
+
+              <h3> Results </h3>
+              <div style={{marginLeft: '1em'}}>
+                <table className="pure-table pure-table-horizontal table-100">
+                  <thead>
+                    <tr>
+                      <td>Proposal</td>
+                      <td>Your Vote</td>
+                      <td>Results</td>
+                      <td>Proposal Payout</td>
+                      <td>Voting Payout</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                    {this.state.rounds[1].proposal.map( item =>{
+                      return <tr key={item.hash}>
+                          <td>{item.name}</td>
+                          <td>yes</td>
+                          <td>9 / 1</td>
+                          <td>0</td>
+                          <td>10</td>
+                      </tr>
+                    })}
+
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+            <div className="game-panel" style={{flex: '2'}}>
               <h3>Rounds</h3>
               <div style={{marginLeft: '1em'}}>
                 <table className="pure-table pure-table-horizontal table-100">
@@ -114,32 +181,13 @@ class FormComponent extends Component {
                 </table>
               </div>
 
-          </div>
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
-
-              <h3>Items ({this.state.items.length})</h3>
-              <div style={{marginLeft: '1em'}}>
-                <table className="pure-table pure-table-horizontal table-100">
-                  <thead>
-                    <tr>
-                      <td>Name</td>
-                    </tr>
-                  </thead>
-                  <tbody>
-
-                    {this.state.items.map( item =>{
-                      return <tr key={item.hash}>
-                          <td>{item.name}</td>
-                      </tr>
-                    })}
-
-                  </tbody>
-                </table>
-              </div>
+            </div>
 
           </div>
 
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
+          <div style={{flex: '2', display: 'flex', flexDirection: 'column'}}>
+
+            <div className="game-panel" style={{flex: '2'}}>
 
               <h3>Players ({this.state.players.length})</h3>
               <div style={{marginLeft: '1em'}}>
@@ -165,115 +213,8 @@ class FormComponent extends Component {
                 </table>
               </div>
 
-          </div>
-        </div>
-
-        <h2>Round 2: Submit a proposal</h2>
-        <div className="pure-g">
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
-            <h3> Add Item </h3>
-            <p>(dropdown)</p>
-          </div>
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
-            <h3> Remove Item </h3>
-            <div style={{marginLeft: '1em'}}>
-              <table className="pure-table pure-table-horizontal table-100">
-                <thead>
-                  <tr>
-                    <td>Name</td>
-                  </tr>
-                </thead>
-                <tbody>
-
-                  {this.state.items.map( item =>{
-                    return <tr key={item.hash}>
-                        <td>{item.name}</td>
-                    </tr>
-                  })}
-
-                </tbody>
-              </table>
             </div>
-          </div>
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
-            <h3> Pass </h3>
-            <p>(dropdown)</p>
-          </div>
-
-          <div className="pure-u-1 pad-box">
-            <h3> Confirm</h3>
-            <p>"remove NEO?"</p>
-            <button className="pure-button pure-button-primary"> Submit </button>
-          </div>
-        </div>
-
-        <h2>Round 2: Vote on proposals</h2>
-        <div className="pure-g">
-          <div className="pure-u-1 pure-u-lg-1-2 pad-box">
-
-            <h3> Proposals </h3>
-            <div style={{marginLeft: '1em'}}>
-              <table className="pure-table pure-table-horizontal table-100">
-                <thead>
-                  <tr>
-                    <td>Name</td>
-                  </tr>
-                </thead>
-                <tbody>
-
-                  {this.state.rounds[1].proposal.map( item =>{
-                    return <tr key={item.hash}>
-                        <td>{item.name}</td>
-                    </tr>
-                  })}
-
-                </tbody>
-              </table>
-            </div>
-
-          </div>
-          <div className="pure-u-1 pure-u-lg-1-2 pad-box">
-            <p> Remove "NEO" </p>
-            <div style={{display: 'flex'}}>
-              <button style={{flex: '1 1 auto'}} className="pure-button pure-button-primary"> Yes </button>
-              <button style={{flex: '1 1 auto'}} className="pure-button pure-button-primary"> No </button>
-            </div>
-            <button className="pure-button pure-button-primary"> Confirm </button>
-          </div>
-
-        </div>
-
-        <h2>Round 2: Results</h2>
-        <div className="pure-g">
-          <div className="pure-u-1">
-
-            <h3> Proposals </h3>
-            <div style={{marginLeft: '1em'}}>
-              <table className="pure-table pure-table-horizontal table-100">
-                <thead>
-                  <tr>
-                    <td>Proposal</td>
-                    <td>Your Vote</td>
-                    <td>Results</td>
-                    <td>Proposal Payout</td>
-                    <td>Voting Payout</td>
-                  </tr>
-                </thead>
-                <tbody>
-
-                  {this.state.rounds[1].proposal.map( item =>{
-                    return <tr key={item.hash}>
-                        <td>{item.name}</td>
-                        <td>yes</td>
-                        <td>9 / 1</td>
-                        <td>0</td>
-                        <td>10</td>
-                    </tr>
-                  })}
-
-                </tbody>
-              </table>
-            </div>
+            <div className="game-panel" style={{flex: '5'}}>Chat</div>
 
           </div>
 
