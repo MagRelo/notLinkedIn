@@ -18,7 +18,7 @@ var socketAuth = function socketAuth(socket, next){
   }
 
   // This data will be in the cookie
-  socket.userId = 123456
+  socket.userId = socket.id
   socket.gameId = '5a7251f391b319a1c28e66da'
 
   return next();
@@ -49,32 +49,90 @@ exports.startIo = function startIo(server){
           if(!gameDoc){throw {error: 'no game'}}
           const currentRound = gameDoc.status.currentRound
 
-          // validate action: get from internal array
-          // validate target: get from internal array
           // validate round
           if(data.round !== currentRound){
             console.log(data.round, currentRound);
             throw {error: 'wrong round'}
           }
+          // validate action: get from internal array
+          // validate target: get from internal array
 
-          const proposalIndex = gameDoc.proposals.findIndex(proposal => {return proposal.proposalId === socket.userId + currentRound})
+
+          const roundData = gameDoc.rounds[currentRound]
+          const proposalIndex = roundData.proposals.findIndex(proposal => {return proposal.userId === socket.userId})
           if (proposalIndex > -1 ) {
-            gameDoc.proposals[proposalIndex] = {
-              proposalId: socket.userId + currentRound,
+            roundData.proposals[proposalIndex] = {
               userId: socket.userId,
-              currentRound: currentRound,
+              round: currentRound,
               action: data.proposalAction,
               target: data.proposalTarget
             }
           } else {
-            gameDoc.proposals.push({
-              proposalId: socket.userId + currentRound,
+            roundData.proposals.push({
               userId: socket.userId,
-              currentRound: currentRound,
+              round: currentRound,
               action: data.proposalAction,
               target: data.proposalTarget
             })
           }
+          gameDoc.rounds[currentRound] = roundData
+
+
+
+          return GameSchema.update({'_id': gameDoc._id}, gameDoc, {new: true})
+        })
+        .then(updatedGame => {
+          return GameSchema.findById(socket.gameId).lean()
+        })
+        .then(updatedGame => {
+          return Promise.resolve(game.emit('update', updatedGame))
+        })
+        .catch(error => {
+          console.log(error)
+          return Promise.resolve(game.emit('error', error))
+        })
+    })
+
+    // "vote"
+    socket.on('vote', data => {
+      GameSchema.findById(socket.gameId).lean()
+        .then(gameDoc => {
+
+          if(!gameDoc){throw {error: 'no game'}}
+          const currentRound = gameDoc.status.currentRound
+
+          // validate action: get from internal array
+          // validate target: get from internal array
+
+          // validate round
+          if(data.round !== currentRound){
+            throw {
+              error: 'wrong round',
+              submitted: data.round,
+              current: currentRound
+            }
+          }
+
+
+          const roundData = gameDoc.rounds[currentRound]
+          const voteIndex = roundData.votes.findIndex(vote => {return vote.userId === socket.userId})
+          if (voteIndex > -1 ) {
+            roundData.votes[voteIndex] = {
+              userId: socket.userId,
+              round: currentRound,
+              target: data.voteTarget,
+              vote: data.vote
+            }
+          } else {
+            roundData.votes.push({
+              userId: socket.userId,
+              round: currentRound,
+              target: data.voteTarget,
+              vote: data.vote
+            })
+          }
+          gameDoc.rounds[currentRound] = roundData
+
 
           return GameSchema.update({'_id': gameDoc._id}, gameDoc, {new: true})
         })
@@ -94,47 +152,3 @@ exports.startIo = function startIo(server){
 
   return io;
 };
-
-
-const round = {
-  meta: {
-    index: 0,
-    roundNumber: 1
-  },
-  proposals: {
-    1: {
-      id: '123',
-      action: 'add',
-      item: {}
-    },
-    2: null,
-    3: null,
-    4: null
-  },
-  votes: {
-    1: {
-      123: 0,
-      456: 1,
-    },
-    2: null,
-    3: null,
-    4: null
-  },
-  results: {
-    proposalVotes: [],
-    playerList: [],
-  }
-}
-
-const roundTemplate = {
-  "meta" : {
-    "index" : 2,
-    "roundNumber" : 3
-  },
-  "proposals" : {},
-  "votes" : {},
-  "results" : {
-    "proposalVotes" : [],
-    "playerList" : []
-  }
-}

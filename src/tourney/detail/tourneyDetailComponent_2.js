@@ -26,8 +26,7 @@ class FormComponent extends Component {
     // connect to game
     gameSocket = io('http://localhost:8080/game');
     gameSocket.on('connect', data =>{
-      console.log('Game connected')
-      // get game data
+      console.log('Game connected, fetching data...')
       gameSocket.emit('update', {gameId: '5a7251f391b319a1c28e66da'})
 
     })
@@ -38,62 +37,8 @@ class FormComponent extends Component {
     this.state = {
       modalIsOpen: false,
       timeRemaining: 30,
-      items: [
-        {
-          "id": "bitcoin",
-          "name": "Bitcoin",
-          "symbol": "BTC",
-          "rank": "1",
-          "price_usd": "8915.4",
-          "price_btc": "1.0",
-          "24h_volume_usd": "8789180000.0",
-          "market_cap_usd": "150128756435",
-          "available_supply": "16839262.0",
-          "total_supply": "16839262.0",
-          "max_supply": "21000000.0",
-          "percent_change_1h": "-1.98",
-          "percent_change_24h": "-11.75",
-          "percent_change_7d": "-20.96",
-          "last_updated": "1517515768"
-        },
-        {
-          "id": "ethereum",
-          "name": "Ethereum",
-          "symbol": "ETH",
-          "rank": "2",
-          "price_usd": "1008.73",
-          "price_btc": "0.114473",
-          "24h_volume_usd": "4649030000.0",
-          "market_cap_usd": "98200256287.0",
-          "available_supply": "97350387.0",
-          "total_supply": "97350387.0",
-          "max_supply": null,
-          "percent_change_1h": "-3.18",
-          "percent_change_24h": "-8.76",
-          "percent_change_7d": "-4.75",
-          "last_updated": "1517515753"
-        },
-        {
-          "id": "ripple",
-          "name": "Ripple",
-          "symbol": "XRP",
-          "rank": "3",
-          "price_usd": "0.942359",
-          "price_btc": "0.00010687",
-          "24h_volume_usd": "1216350000.0",
-          "market_cap_usd": "36779340372.0",
-          "available_supply": "39029011631.0",
-          "total_supply": "99992725510.0",
-          "max_supply": "100000000000",
-          "percent_change_1h": "-3.83",
-          "percent_change_24h": "-16.12",
-          "percent_change_7d": "-28.43",
-          "last_updated": "1517516041"
-        }
-      ],
-
-
       status: {},
+      items: [],
       playerList: [],
       candidateList: [],
       proposalList: [],
@@ -124,7 +69,7 @@ class FormComponent extends Component {
       items: data.itemList,
       playerList: data.playerList,
       candidateList: this.filterCandidates(data.candidateList, this.state.items),
-      proposalList: data.proposals.map(proposal => proposal.target)
+      proposalList: data.rounds[data.status.currentRound].proposals.map(proposal => proposal.target)
     })
 
     // if round in progress, start/update timer
@@ -146,7 +91,7 @@ class FormComponent extends Component {
 
   // Submit functions
   submitProposal(proposalTarget, proposalAction){
-    console.log('Submit proposal: ', proposalTarget);
+    console.log('Submit proposal: ', proposalTarget.name);
     gameSocket.emit('proposal', {
       round: 0,
       proposalTarget: proposalTarget,
@@ -154,10 +99,11 @@ class FormComponent extends Component {
     })
 
   }
-  submitVote(){
+  submitVote(proposalTarget, vote){
+    console.log('Submit vote: ', proposalTarget.name);
     gameSocket.emit('vote', {
       target: proposalTarget,
-      vote: proposalAction,
+      vote: vote,
     })
 
   }
@@ -205,6 +151,12 @@ class FormComponent extends Component {
   toggleVote(){ this.setState({'status': {currentPhase: 'votes'}}) }
   toggleResults(){ this.setState({'status': {currentPhase: 'results'}}) }
 
+  //
+  // <button className="pure-button pure-button-primary" onClick={this.toggleActions.bind(this)}>proposals</button>
+  // <button className="pure-button pure-button-primary" onClick={this.toggleVote.bind(this)}>vote</button>
+  // <button className="pure-button pure-button-primary" onClick={this.toggleResults.bind(this)}>resultsList</button>
+  //
+
   render() {
     return(
 
@@ -216,11 +168,6 @@ class FormComponent extends Component {
             <div className="game-panel" style={{flex: '5'}}>
 
               <time style={{float: 'right', order: 20}}>{this.state.timeRemaining}
-
-                <button onClick={this.toggleActions.bind(this)}>proposals</button>
-                <button onClick={this.toggleVote.bind(this)}>vote</button>
-                <button onClick={this.toggleResults.bind(this)}>resultsList</button>
-
               </time>
 
               {this.state.status.currentPhase === 'proposals' ?

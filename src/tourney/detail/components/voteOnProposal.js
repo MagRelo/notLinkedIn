@@ -22,6 +22,21 @@ class voteOnProposal extends React.Component {
     this.setState({vote: event.target.name})
   }
 
+  answerYes(vote){
+    this.setState({selectedVote: 1})
+  }
+  answerNo(vote){
+    this.setState({selectedVote: 0})
+  }
+  setVoteStyle(button){
+    if(button === this.state.selectedVote){
+      return {background: '#103A52'}
+    }
+
+    // default
+    return {}
+}
+
   render(){
       return(
         <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
@@ -51,21 +66,27 @@ class voteOnProposal extends React.Component {
                   </div>
                 </div>
 
-                <div style={{flex: 1, display: 'flex'}}>
-                  <div style={{flex: 1, textAlign: 'center'}}>
+                <div style={{display: 'flex', justifyContent: 'space-evenly'}}>
+                  <div>
                     <button
-                      name='1'
-                      className="pure-button pure-button-primary"> Yes </button>
+                      className="pure-button pure-button-primary"
+                      style={this.setVoteStyle(1)}
+                      onClick={this.answerYes.bind(this)}> Yes {this.state.selectedVote === 1 ? '✔' : ''}
+                    </button>
                   </div>
-                  <div style={{flex: 1, textAlign: 'center'}} >
+                  <div>
                     <button
-                      name='0'
-                      className="pure-button pure-button-primary"> No </button>
-                   </div>
+                      className="pure-button pure-button-primary"
+                      style={this.setVoteStyle(0)}
+                      onClick={this.answerNo.bind(this)}> No {this.state.selectedVote === 0  ? '✔' : ''}
+                    </button>
+                  </div>
                 </div>
 
                 <div style={{flex: 1, textAlign: 'center'}}>
-                  <button className="pure-button pure-button-primary"> Submit </button>
+                  <button
+                    className="pure-button pure-button-primary"
+                    onClick={() => {this.props.submitVote(this.state.voteTarget, this.state.selectedVote)}}> Submit </button>
                 </div>
 
               </div>

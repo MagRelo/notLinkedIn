@@ -7,13 +7,13 @@ var StreamMongoose = stream.mongoose;
 
 var GameSchema = new Schema({
   status: Object,
-  proposals: [],
-  votes: [],
   rounds: [{
     meta: {
       index: Number,
       roundNumber: Number
     },
+    proposals: [],
+    votes: [],
     results: {
       proposalVotes: [],
       playerList: [],
