@@ -12,7 +12,7 @@ import { UserIsAuthenticated } from './util/wrappers.js'
 //   .then(() => { console.log('Web3 initialized!') })
 //   .catch(() => { console.log('Error in web3 initialization.') })
 
-import socket from './socket/connection'
+// import socket from './socket/connection'
 
 // Layouts
 import App from './App'

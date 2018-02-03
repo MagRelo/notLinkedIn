@@ -10,7 +10,7 @@ module.exports = {
   // },
 
   mongo: {
-    uri: 'mongodb://localhost:27017/notLinkedin'
+    uri: 'mongodb://localhost:27017/tourney'
   },
 
 

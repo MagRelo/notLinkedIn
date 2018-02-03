@@ -2,6 +2,8 @@ const express = require('express')
 const app = express()
 const assert = require('assert')
 
+const sockets = require('./sockets.js')
+
 //
 // const twitterConsumerKey = 'a9nNKuouyFRamZSZyUtvRbkGl'
 // const twitterSecret = 'Ep9QTjcv5R4ry5py34Q4FjPlytahPMPABnGmGA293V4omVNVYE'
@@ -26,7 +28,7 @@ var config = require('./config/environment');
 var mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 const mongoConfig = {
-  uri: process.env.MONGODB_URL_INT || 'mongodb://127.0.0.1:27017/notLinkedin',
+  uri: process.env.MONGODB_URL_INT || 'mongodb://127.0.0.1:27017/tourney',
   options: {
     useMongoClient: true
   }
@@ -128,27 +130,8 @@ app.use(morgan('dev', {
 // API ROUTING
 require('./api')(app);
 
-app.listen(8080, function () {
+var server = app.listen(8080, function () {
   console.log('App running on port 8080')
 })
 
-
-
-var http = require('http');
-var server = http.createServer();
-var socket_io = require('socket.io');
-server.listen(8081);
-var io = socket_io();
-io.attach(server);
-
-io.on('connection', function(socket){
-  console.log("Socket connected: " + socket.id);
-
-  socket.on('action', (action) => {
-    if(action.type === 'server/hello'){
-      console.log('The client says:', action.data);
-      socket.emit('action', {type:'message', data:'Tuesday!'});
-    }
-  });
-  
-});
+sockets.startIo(server);
