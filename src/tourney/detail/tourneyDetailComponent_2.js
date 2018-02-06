@@ -25,19 +25,30 @@ class FormComponent extends Component {
 
     // connect to game
     gameSocket = io('http://localhost:8080/game');
+    // gameSocket.on('error', this.socketError)
+    // gameSocket.on('disconnect', this.socketError)
+    // gameSocket.on('connect_failed', this.socketError)
+    gameSocket.on('reconnecting', this.socketError)
+    // gameSocket.on('reconnect_failed', this.socketError)
+
     gameSocket.on('connect', data =>{
       console.log('Game connected, fetching data...')
       gameSocket.emit('update', {gameId: '5a7251f391b319a1c28e66da'})
 
     })
     gameSocket.on('update', this.updateGameData.bind(this))
-    gameSocket.on('error', this.socketError)
+
 
 
     this.state = {
       modalIsOpen: false,
       timeRemaining: 30,
-      status: {},
+      status: {
+        progress: {
+          currentRound: 0,
+          currentPhase: ''
+        }
+      },
       items: [],
       playerList: [],
       candidateList: [],
@@ -62,24 +73,28 @@ class FormComponent extends Component {
   // socket handlers
   updateGameData(data){
     console.log(data)
+
+    // check gameState
+
+
     this.setState({
       status: data.status,
       timeRemaining: data.status.timeRemaining,
       rounds: data.rounds,
       items: data.itemList,
       playerList: data.playerList,
-      candidateList: this.filterCandidates(data.candidateList, this.state.items),
+      candidateList: this.filterCandidates(data.candidateList, data.itemList),
       proposalList: data.rounds[data.status.currentRound].proposals.map(proposal => proposal.target)
     })
 
     // if round in progress, start/update timer
-    if(false){
-      startCountdown()
+    if(data.status.gameInProgress){
+      this.startCountdown()
     }
 
   }
   socketError(data){
-    console.error(data)
+    console.log('Reconnecting... Attempts:', data)
   }
 
 
@@ -91,9 +106,9 @@ class FormComponent extends Component {
 
   // Submit functions
   submitProposal(proposalTarget, proposalAction){
-    console.log('Submit proposal: ', proposalTarget.name);
+    console.log('Submit proposal: ', proposalTarget);
     gameSocket.emit('proposal', {
-      round: 0,
+      round: this.status.currentRound,
       proposalTarget: proposalTarget,
       proposalAction: proposalAction
     })
@@ -102,6 +117,7 @@ class FormComponent extends Component {
   submitVote(proposalTarget, vote){
     console.log('Submit vote: ', proposalTarget.name);
     gameSocket.emit('vote', {
+      round: this.status.currentRound,
       target: proposalTarget,
       vote: vote,
     })
@@ -118,6 +134,7 @@ class FormComponent extends Component {
     this.setState({timeRemaining: nextTick})
     if(nextTick === 0){
       clearInterval(intervalId)
+      gameSocket.emit('update', {gameId: '5a7251f391b319a1c28e66da'})
     }
   }
   filterCandidates(baseArray, removeArray){

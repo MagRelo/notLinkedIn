@@ -7,7 +7,7 @@ const addProposal = (props) => {
     <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
 
       <div style={{flex: '1'}}>
-        <h2>Results</h2>
+        <h2>Rounds</h2>
       </div>
 
       <div style={{flex: 5}}>
@@ -27,7 +27,7 @@ const addProposal = (props) => {
           <tbody>
             <tr>
               {roundList.map(round =>{
-                return <td key={round.meta.index}>{round.proposal ? '✔' : '' }</td>
+                return <td key={round.meta.index}>{round.results ? '✔' : '' }</td>
               })}
             </tr>
           </tbody>

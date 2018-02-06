@@ -62,7 +62,6 @@ UserSchema.methods.removeFromWallet = function(contractAddress, numberOfTokens, 
 // schema ----
 
 UserSchema.statics.upsertTwitterUser = function(token, tokenSecret, profile, cb) {
-  var that = this;
 
   return this.findOne({ 'twitterProvider.id': profile.id }, function(err, user) {
 

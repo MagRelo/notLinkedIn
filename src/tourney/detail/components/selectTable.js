@@ -23,6 +23,8 @@ class selectTable extends React.Component {
                 <tbody>
 
                   {this.props.items.map( item =>{
+                    if(!item){ return null }
+
                     return <tr key={item.symbol}
                       onClick={()=>{this.props.selectRow(item, this.props.action)}}
                       style={{color: item.symbol === this.props.selectedItem.symbol ? 'orange': ''}}>

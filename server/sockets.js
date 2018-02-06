@@ -2,11 +2,10 @@ var io = require('socket.io');
 var cookie = require('cookie');
 var cookieParser = require('cookie-parser');
 
+const GameController = require('./controllers/game')
 
-const GameSchema = require('./models/game')
 
-
-var socketAuth = function socketAuth(socket, next){
+var gameAuth = function socketAuth(socket, next){
 
   var handshakeData = socket.request;
   var parsedCookie = cookie.parse(handshakeData.headers.cookie);
@@ -28,125 +27,14 @@ exports.startIo = function startIo(server){
   io = io.listen(server);
 
   var game = io.of('/game');
-  game.use(socketAuth);
+  game.use(gameAuth);
   game.on('connection', (socket) => {
 
-    // "update"
-    socket.on('update', data => {
-      GameSchema.findById(socket.gameId)
-        .then(gameDoc => {
-          return Promise.resolve(game.emit('update', gameDoc))
-        })
-    })
-
-    // "signin"
-
-    // "propose"
-    socket.on('proposal', data => {
-      GameSchema.findById(socket.gameId).lean()
-        .then(gameDoc => {
-
-          if(!gameDoc){throw {error: 'no game'}}
-          const currentRound = gameDoc.status.currentRound
-
-          // validate round
-          if(data.round !== currentRound){
-            console.log(data.round, currentRound);
-            throw {error: 'wrong round'}
-          }
-          // validate action: get from internal array
-          // validate target: get from internal array
-
-
-          const roundData = gameDoc.rounds[currentRound]
-          const proposalIndex = roundData.proposals.findIndex(proposal => {return proposal.userId === socket.userId})
-          if (proposalIndex > -1 ) {
-            roundData.proposals[proposalIndex] = {
-              userId: socket.userId,
-              round: currentRound,
-              action: data.proposalAction,
-              target: data.proposalTarget
-            }
-          } else {
-            roundData.proposals.push({
-              userId: socket.userId,
-              round: currentRound,
-              action: data.proposalAction,
-              target: data.proposalTarget
-            })
-          }
-          gameDoc.rounds[currentRound] = roundData
-
-
-
-          return GameSchema.update({'_id': gameDoc._id}, gameDoc, {new: true})
-        })
-        .then(updatedGame => {
-          return GameSchema.findById(socket.gameId).lean()
-        })
-        .then(updatedGame => {
-          return Promise.resolve(game.emit('update', updatedGame))
-        })
-        .catch(error => {
-          console.log(error)
-          return Promise.resolve(game.emit('error', error))
-        })
-    })
-
-    // "vote"
-    socket.on('vote', data => {
-      GameSchema.findById(socket.gameId).lean()
-        .then(gameDoc => {
-
-          if(!gameDoc){throw {error: 'no game'}}
-          const currentRound = gameDoc.status.currentRound
-
-          // validate action: get from internal array
-          // validate target: get from internal array
-
-          // validate round
-          if(data.round !== currentRound){
-            throw {
-              error: 'wrong round',
-              submitted: data.round,
-              current: currentRound
-            }
-          }
-
-
-          const roundData = gameDoc.rounds[currentRound]
-          const voteIndex = roundData.votes.findIndex(vote => {return vote.userId === socket.userId})
-          if (voteIndex > -1 ) {
-            roundData.votes[voteIndex] = {
-              userId: socket.userId,
-              round: currentRound,
-              target: data.voteTarget,
-              vote: data.vote
-            }
-          } else {
-            roundData.votes.push({
-              userId: socket.userId,
-              round: currentRound,
-              target: data.voteTarget,
-              vote: data.vote
-            })
-          }
-          gameDoc.rounds[currentRound] = roundData
-
-
-          return GameSchema.update({'_id': gameDoc._id}, gameDoc, {new: true})
-        })
-        .then(updatedGame => {
-          return GameSchema.findById(socket.gameId).lean()
-        })
-        .then(updatedGame => {
-          return Promise.resolve(game.emit('update', updatedGame))
-        })
-        .catch(error => {
-          console.log(error)
-          return Promise.resolve(game.emit('error', error))
-        })
-    })
+    // events
+    socket.on('update', data => {GameController.handleUpdate(game, socket, data)})
+    socket.on('update', data => {GameController.handleReady(game, socket, data)})
+    socket.on('proposal', data => {GameController.handlePropsal(game, socket, data)})
+    socket.on('vote', data => {GameController.handleVote(game, socket, data)})
 
   })
 
