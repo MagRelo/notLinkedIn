@@ -1,38 +1,58 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router'
 
+// sockets
+import io from 'socket.io-client';
+let gameSocket
+
+// timer
+let intervalId = 0
+
+import LoginButton from '../signin/signinContainer'
 import WrappedModal from '../confirmationModal'
+
+//
+import AddProposal from './components/addProposal'
+import VoteOnProposal from './components/voteOnProposal'
+import RoundResults from './components/roundResults'
+import RoundProgress from './components/roundProgress'
+import PlayerList from './components/playerList'
+import SelectTable from './components/selectTable'
 
 
 class FormComponent extends Component {
   constructor(props) {
     super(props)
+
+    // connect to game
+    gameSocket = io('http://localhost:8080/game');
+
+    // gameSocket.on('error', this.socketError)
+    // gameSocket.on('disconnect', this.socketError)
+    // gameSocket.on('connect_failed', this.socketError)
+    // gameSocket.on('reconnect_failed', this.socketError)
+
+    gameSocket.on('reconnecting', this.socketError)
+    gameSocket.on('connect', data =>{
+      console.log('Game connected, fetching data...')
+      gameSocket.emit('update', {gameId: '5a7251f391b319a1c28e66da'})
+    })
+    gameSocket.on('update', this.updateGameData.bind(this))
+
     this.state = {
       modalIsOpen: false,
-      rounds: [
-        {hash: 1, proposal: true, voting: true, settlement: true},
-        {hash: 2, proposal: [
-          {hash: 1, name: "Remove NEO"},
-          {hash: 2, name: "ADD WAVES"},
-          {hash: 3, name: "Add LTC"},
-        ], voting: false, settlement: false},
-        {hash: 3, proposal: false, voting: false, settlement: false},
-      ],
-      items: [
-        {hash: 1, name: "BTC"},
-        {hash: 2, name: "ETH"},
-        {hash: 3, name: "NEO"}
-      ],
-      players: [
-        {hash: 1, name: "bill", chipCount: 100},
-        {hash: 2, name: "jim", chipCount: 100},
-        {hash: 3, name: "ted", chipCount: 100},
-        {hash: 4, name: "ted", chipCount: 100},
-        {hash: 5, name: "ted", chipCount: 100},
-        {hash: 6, name: "ted", chipCount: 100},
-        {hash: 7, name: "ted", chipCount: 100},
-        {hash: 8, name: "ted", chipCount: 100}
-      ],
+      timeRemaining: 30,
+      status: {
+        progress: {
+          currentRound: 0,
+          currentPhase: ''
+        }
+      },
+      items: [],
+      playerList: [],
+      candidateList: [],
+      proposalList: [],
+      rounds: [],
     }
 
     this.openModal = this.openModal.bind(this);
@@ -40,20 +60,98 @@ class FormComponent extends Component {
     this.closeModal = this.closeModal.bind(this);
   }
 
+  // lifecycle
+  componentDidMount(){
+  }
+  componentWillUnmount() {
+    gameSocket.disconnect()
+    clearInterval(intervalId)
+  }
+
+
+  // socket handlers
+  updateGameData(data){
+    console.log(data)
+
+    // check gameState
+    if(data.status.gameReady){
+      this.setState({ })
+    }
+
+
+    if(data.status.gameInProgress){
+      this.setState({
+        status: data.status,
+        timeRemaining: data.status.timeRemaining,
+        rounds: data.rounds,
+        items: data.itemList,
+        playerList: data.playerList,
+        candidateList: this.filterCandidates(data.candidateList, data.itemList),
+        proposalList: data.rounds[data.status.currentRound].proposals.map(proposal => proposal.target)
+      })
+
+      // show counter display
+      this.startCountdown()
+    }
+
+    //
+    if(data.status.gameComplete){
+      this.setState({rounds: data.rounds})
+    }
+
+  }
+  socketError(data){
+    console.log('Reconnecting... Attempts:', data)
+  }
+
+
   // Modal functions
   openModal() { this.setState({modalIsOpen: true})}
   afterOpenModal() {}
   closeModal() { this.setState({modalIsOpen: false})}
 
-  componentDidMount(){
+
+  // Submit functions
+  submitProposal(proposalTarget, proposalAction){
+    console.log('Submit proposal: ', proposalTarget);
+    gameSocket.emit('proposal', {
+      round: this.status.currentRound,
+      proposalTarget: proposalTarget,
+      proposalAction: proposalAction
+    })
+
+  }
+  submitVote(proposalTarget, vote){
+    console.log('Submit vote: ', proposalTarget.name);
+    gameSocket.emit('vote', {
+      round: this.status.currentRound,
+      target: proposalTarget,
+      vote: vote,
+    })
+
   }
 
-
+  // display functions
+  startCountdown(){
+    clearInterval(intervalId)
+    intervalId = setInterval(this.countDownTimer.bind(this), 1000)
+  }
+  countDownTimer(){
+    let nextTick = this.state.timeRemaining - 1
+    this.setState({timeRemaining: nextTick})
+    if(nextTick === 0){
+      clearInterval(intervalId)
+      gameSocket.emit('update', {gameId: '5a7251f391b319a1c28e66da'})
+    }
+  }
+  filterCandidates(baseArray, removeArray){
+    const idArray = removeArray.map(item => item.symbol)
+    return baseArray.filter(baseItem => !~idArray.indexOf(baseItem.symbol))
+  }
   round(value, places){
     places = places || 4
     return +(Math.round(value + "e+" + places)  + "e-" + places);
   }
-
   displayWei(input){
     let ethereum = ''
     let wei = input
@@ -66,7 +164,6 @@ class FormComponent extends Component {
     return 'Ξ' + ethereum + ' ETH ($' +
      this.round(this.state.exchangeRate * web3.fromWei(wei, 'ether')) + ')'
   }
-
   format(input){
     if(typeof(input) === 'object'){
       input = input.toNumber()
@@ -74,212 +171,62 @@ class FormComponent extends Component {
     return input
   }
 
-  tokenShare(chipCount, players){
-
-    let chipTotal = players.reduce((count, player) => { return count + player.chipCount }, 0)
-
-    return this.round(100 * (chipCount / chipTotal), 2) + '%'
-  }
-
   render() {
     return(
 
-      <main className="">
+      <main style={{display: 'flex', flexDirection: 'column'}}>
 
-        <h2>Tournament Progress</h2>
-        <div className="pure-g">
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
-
-              <h3>Rounds</h3>
-              <div style={{marginLeft: '1em'}}>
-                <table className="pure-table pure-table-horizontal table-100">
-                  <thead>
-                    <tr>
-                      <td>#</td>
-                      <td>Proposal</td>
-                      <td>Voting</td>
-                    </tr>
-                  </thead>
-                  <tbody>
-
-                    {this.state.rounds.map( round =>{
-                      return <tr key={round.hash}>
-                          <td>{round.hash}</td>
-                          <td>{round.proposal ? '✔' : '' }</td>
-                          <td>{round.voting ? '✔' : '' }</td>
-                      </tr>
-                    })}
-
-                  </tbody>
-                </table>
-              </div>
-
-          </div>
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
-
-              <h3>Items ({this.state.items.length})</h3>
-              <div style={{marginLeft: '1em'}}>
-                <table className="pure-table pure-table-horizontal table-100">
-                  <thead>
-                    <tr>
-                      <td>Name</td>
-                    </tr>
-                  </thead>
-                  <tbody>
-
-                    {this.state.items.map( item =>{
-                      return <tr key={item.hash}>
-                          <td>{item.name}</td>
-                      </tr>
-                    })}
-
-                  </tbody>
-                </table>
-              </div>
-
-          </div>
-
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
-
-              <h3>Players ({this.state.players.length})</h3>
-              <div style={{marginLeft: '1em'}}>
-                <table className="pure-table pure-table-horizontal table-100">
-                  <thead>
-                    <tr>
-                      <td>Name</td>
-                      <td>Chips</td>
-                      <td>Share</td>
-                    </tr>
-                  </thead>
-                  <tbody>
-
-                    {this.state.players.map( player =>{
-                      return <tr key={player.hash}>
-                          <td>{player.name}</td>
-                          <td>{player.chipCount}</td>
-                          <td>{this.tokenShare(player.chipCount, this.state.players)}</td>
-                      </tr>
-                    })}
-
-                  </tbody>
-                </table>
-              </div>
-
-          </div>
+        <div style={{flex: '1'}}>
+          <LoginButton tournamentId={this.props.params.tournamentId}/>
         </div>
 
-        <h2>Round 2: Submit a proposal</h2>
-        <div className="pure-g">
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
-            <h3> Add Item </h3>
-            <p>(dropdown)</p>
-          </div>
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
-            <h3> Remove Item </h3>
-            <div style={{marginLeft: '1em'}}>
-              <table className="pure-table pure-table-horizontal table-100">
-                <thead>
-                  <tr>
-                    <td>Name</td>
-                  </tr>
-                </thead>
-                <tbody>
+        <div style={{flex: '9', display: 'flex', flexDirection: 'row'}}>
 
-                  {this.state.items.map( item =>{
-                    return <tr key={item.hash}>
-                        <td>{item.name}</td>
-                    </tr>
-                  })}
+          <div style={{flex: '4', display: 'flex', flexDirection: 'column'}}>
+            <div className="game-panel" style={{flex: '5'}}>
 
-                </tbody>
-              </table>
+              <time style={{float: 'right', order: 20}}>{this.state.timeRemaining}
+              </time>
+
+              {this.state.status.currentPhase === 'proposals' ?
+                <AddProposal
+                  candidateList={this.state.candidateList}
+                  itemList={this.state.items}
+                  submitProposal={this.submitProposal}/>
+              :null}
+
+              {this.state.status.currentPhase === 'votes' ?
+                <VoteOnProposal
+                  proposalList={this.state.proposalList}
+                  submitVote={this.submitVote.bind(this)}/>
+              :null}
+
+              {this.state.status.currentPhase === 'results' ?
+                <RoundResults resultsList={this.state.items}/>
+              :null}
+
+            </div>
+            <div className="game-panel" style={{flex: '2'}}>
+
+              <RoundProgress roundList={this.state.rounds}/>
+
             </div>
           </div>
-          <div className="pure-u-1 pure-u-lg-1-3 pad-box">
-            <h3> Pass </h3>
-            <p>(dropdown)</p>
-          </div>
 
-          <div className="pure-u-1 pad-box">
-            <h3> Confirm</h3>
-            <p>"remove NEO?"</p>
-            <button className="pure-button pure-button-primary"> Submit </button>
-          </div>
-        </div>
+          <div style={{flex: '2', display: 'flex', flexDirection: 'column'}}>
+            <div className="game-panel" style={{flex: '2'}}>
 
-        <h2>Round 2: Vote on proposals</h2>
-        <div className="pure-g">
-          <div className="pure-u-1 pure-u-lg-1-2 pad-box">
+              <PlayerList playerList={this.state.playerList}/>
 
-            <h3> Proposals </h3>
-            <div style={{marginLeft: '1em'}}>
-              <table className="pure-table pure-table-horizontal table-100">
-                <thead>
-                  <tr>
-                    <td>Name</td>
-                  </tr>
-                </thead>
-                <tbody>
-
-                  {this.state.rounds[1].proposal.map( item =>{
-                    return <tr key={item.hash}>
-                        <td>{item.name}</td>
-                    </tr>
-                  })}
-
-                </tbody>
-              </table>
             </div>
+            <div className="game-panel" style={{flex: '5'}}>
 
-          </div>
-          <div className="pure-u-1 pure-u-lg-1-2 pad-box">
-            <p> Remove "NEO" </p>
-            <div style={{display: 'flex'}}>
-              <button style={{flex: '1 1 auto'}} className="pure-button pure-button-primary"> Yes </button>
-              <button style={{flex: '1 1 auto'}} className="pure-button pure-button-primary"> No </button>
+              Chat
+
             </div>
-            <button className="pure-button pure-button-primary"> Confirm </button>
           </div>
 
         </div>
-
-        <h2>Round 2: Results</h2>
-        <div className="pure-g">
-          <div className="pure-u-1">
-
-            <h3> Proposals </h3>
-            <div style={{marginLeft: '1em'}}>
-              <table className="pure-table pure-table-horizontal table-100">
-                <thead>
-                  <tr>
-                    <td>Proposal</td>
-                    <td>Your Vote</td>
-                    <td>Results</td>
-                    <td>Proposal Payout</td>
-                    <td>Voting Payout</td>
-                  </tr>
-                </thead>
-                <tbody>
-
-                  {this.state.rounds[1].proposal.map( item =>{
-                    return <tr key={item.hash}>
-                        <td>{item.name}</td>
-                        <td>yes</td>
-                        <td>9 / 1</td>
-                        <td>0</td>
-                        <td>10</td>
-                    </tr>
-                  })}
-
-                </tbody>
-              </table>
-            </div>
-
-          </div>
-
-        </div>
-
-
 
         <WrappedModal
           modalIsOpen={this.state.modalIsOpen}

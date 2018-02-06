@@ -17,7 +17,15 @@ var GameSchema = new Schema({
   playerList: [],
   candidateList: [],
   itemList: [],
-  status: Object,
+  status: {
+    currentRound: Number,
+    currentPhase: String,
+    phaseStartTime: Date,
+    timeRemaining: Number,
+    gameReady: Boolean,
+    gameInProgress: Boolean,
+    gameComplete: Boolean
+  },
   rounds: [{
     meta: Object,
     proposals: [],

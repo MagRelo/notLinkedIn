@@ -3,8 +3,7 @@
  */
 const authController = require('./controllers/auth')
 const userController = require('./controllers/user')
-const messageController = require('./controllers/message')
-const contractController = require('./controllers/contract')
+const gameController = require('./controllers/game')
 const analyticsController = require('./controllers/analytics')
 
 const passport = require('passport')
@@ -32,9 +31,8 @@ module.exports = function(app) {
     res.json({deployedFactoryAddress: factoryAddress})
   });
 
-  // CONTRACTS AUTH
-  app.post('/api/contract/search', contractController.searchContracts);
-  app.post('/api/contract/create', contractController.createContract);
+  // Game
+  // app.post('/api/game', gameController.createGame)
 
   // *ANALYTICS*
   app.post('/api/analytics/send', analyticsController.sendEvent);

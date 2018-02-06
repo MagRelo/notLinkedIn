@@ -1,8 +1,8 @@
 const initialState = {
-  config: null
+  user: {}
 }
 
-const contractReducer = (state = initialState, action) => {
+const tournamentReducer = (state = initialState, action) => {
 
   if (action.type === 'REQUEST_SENT')
   {
@@ -11,8 +11,23 @@ const contractReducer = (state = initialState, action) => {
       transactionResult: null
     })
   }
+  if (action.type === 'CONTRACT_CREATED')
+  {
+    return Object.assign({}, state, {
+      contract: action.payload
+    })
+  }
+  if (action.type === 'UPDATE_USER')
+  {
+    return Object.assign({}, state, {
+      user: action.payload
+    })
+  }
+
+
+
 
   return state
 }
 
-export default contractReducer
+export default tournamentReducer

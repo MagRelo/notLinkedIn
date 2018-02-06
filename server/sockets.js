@@ -1,6 +1,7 @@
 var io = require('socket.io');
 var cookie = require('cookie');
 var cookieParser = require('cookie-parser');
+const sigUtil = require('eth-sig-util')
 
 const GameController = require('./controllers/game')
 
@@ -11,16 +12,46 @@ var gameAuth = function socketAuth(socket, next){
   var parsedCookie = cookie.parse(handshakeData.headers.cookie);
 
   // Check for valid cookie and session
-  if (!parsedCookie.servesaSignedToken){
-    // console.log('no signature:', parsedCookie.servesaSignedToken)
-    // return next(new Error('Not Authenticated'));
+  if (!parsedCookie.servesa){
+    console.log('no servesa cookie');
+  } else {
+
+    // parse JSON
+    let cookieObject
+    try {
+      cookieObject = JSON.parse(parsedCookie.servesa)
+    } catch (e) {
+      console.log(e);
+    }
+
+    // setup recovery
+    const msgParams = [{
+      name: 'Message',
+      type: 'string',
+      value: 'You will be logged into game ' + cookieObject.gameId
+    }]
+    const recovered = sigUtil.recoverTypedSignature({
+      data: msgParams,
+      sig: cookieObject.signature
+    })
+
+    // if it matches then we have a valid cookie.
+    if (recovered === cookieObject.userAddress) {
+      console.log('Recovered signer: ' + recovered)
+
+      // check session store for this address, and return the games that they should have access to
+      // TODO - for testing we'll take their word for it
+      socket.userId = cookieObject.userAddress
+      socket.gameId = cookieObject.gameId
+
+    } else {
+      console.log('Failed to verify signer, got: ' + recovered)
+      // box em out
+    }
   }
 
-  // This data will be in the cookie
-  socket.userId = socket.id
-  socket.gameId = '5a7251f391b319a1c28e66da'
-
   return next();
+
 };
 
 exports.startIo = function startIo(server){
@@ -32,7 +63,7 @@ exports.startIo = function startIo(server){
 
     // events
     socket.on('update', data => {GameController.handleUpdate(game, socket, data)})
-    socket.on('update', data => {GameController.handleReady(game, socket, data)})
+    // socket.on('update', data => {GameController.handleReady(game, socket, data)})
     socket.on('proposal', data => {GameController.handlePropsal(game, socket, data)})
     socket.on('vote', data => {GameController.handleVote(game, socket, data)})
 

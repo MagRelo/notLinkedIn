@@ -7,12 +7,10 @@ import { UserIsAuthenticated } from './util/wrappers.js'
 
 
 // Initialize web3 and set in Redux.
-// import getWeb3 from './util/web3/getWeb3'
-// getWeb3
-//   .then(() => { console.log('Web3 initialized!') })
-//   .catch(() => { console.log('Error in web3 initialization.') })
-
-// import socket from './socket/connection'
+import getWeb3 from './util/web3/getWeb3'
+getWeb3
+  .then(() => { console.log('Web3 initialized!') })
+  .catch(() => { console.log('Error in web3 initialization.') })
 
 // Layouts
 import App from './App'
@@ -39,7 +37,7 @@ ReactDOM.render((
           <Route path="contract/list" component={ContractList} />
           <Route path="contract/:contractId" component={ContractDetail} />
 
-          <Route path="tourney" component={TourneyHome} />
+          <Route path="tourney/:tournamentId" component={TourneyHome} />
 
           <Route path="contracts" component={ContractList} />
           <Route path='*' exact={true} component={Page404} />

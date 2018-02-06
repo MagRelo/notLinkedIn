@@ -3,11 +3,11 @@ import { routerReducer } from 'react-router-redux'
 
 import web3Reducer from './util/web3/web3Reducer'
 
-import contractReducer from './contracts/ContractReducer'
+import tourneyReducer from './tourney/TourneyReducer'
 
 const reducer = combineReducers({
   routing: routerReducer,
-  contracts: contractReducer,
+  tournament: tourneyReducer,
   web3: web3Reducer
 })
 
