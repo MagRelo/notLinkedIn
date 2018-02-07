@@ -27,7 +27,10 @@ const addProposal = (props) => {
           <tbody>
             <tr>
               {roundList.map(round =>{
-                return <td key={round.meta.index}>{round.results ? '✔' : '' }</td>
+                return [
+                  <td key={round.meta.index + 'a'}>{round.meta.proposalsClosed ? '✔' : '' }</td>,
+                  <td key={round.meta.index + 'b'}>{round.meta.votesClosed ? '✔' : '' }</td>
+                ]
               })}
             </tr>
           </tbody>

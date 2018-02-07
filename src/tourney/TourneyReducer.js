@@ -1,33 +1,42 @@
 const initialState = {
-  user: {}
+  user: {},
+  list: [],
+  status: {},
+  timeRemaining: 0,
+  rounds: [],
+  items: [],
+  playerList: [],
+  candidateList: [],
+  proposalList: []
 }
 
 const tournamentReducer = (state = initialState, action) => {
 
-  if (action.type === 'REQUEST_SENT')
-  {
-    return Object.assign({}, state, {
-      transactionPending: true,
-      transactionResult: null
-    })
-  }
-  if (action.type === 'CONTRACT_CREATED')
-  {
+  if (action.type === 'CONTRACT_CREATED'){
     return Object.assign({}, state, {
       contract: action.payload
     })
   }
-  if (action.type === 'UPDATE_USER')
-  {
+  if (action.type === 'UPDATE_USER'){
+    console.log('UPDATE_USER');
     return Object.assign({}, state, {
       user: action.payload
     })
   }
-
-
-
+  if (action.type === 'UPDATE_LIST'){
+    console.log('UPDATE_LIST');
+    return Object.assign({}, state, {
+      list: action.payload
+    })
+  }
 
   return state
 }
 
 export default tournamentReducer
+
+
+function filterCandidates(baseArray, removeArray){
+  const idArray = removeArray.map(item => item.symbol)
+  return baseArray.filter(baseItem => !~idArray.indexOf(baseItem.symbol))
+}

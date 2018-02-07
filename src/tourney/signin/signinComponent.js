@@ -21,7 +21,7 @@ class SignInComponent extends Component {
     }
     function watchForWeb3(){
       if(this.props.web3.web3Instance){
-        console.log('ready!');
+        console.log('web3 ready!');
         this.setState({ready: true})
         clearInterval(intId);
       } else {

@@ -54,10 +54,6 @@ class FormComponent extends Component {
       proposalList: [],
       rounds: [],
     }
-
-    this.openModal = this.openModal.bind(this);
-    this.afterOpenModal = this.afterOpenModal.bind(this);
-    this.closeModal = this.closeModal.bind(this);
   }
 
   // lifecycle
@@ -68,47 +64,43 @@ class FormComponent extends Component {
     clearInterval(intervalId)
   }
 
-
   // socket handlers
   updateGameData(data){
-    console.log(data)
+    const gameData = data.public
+    console.log(gameData)
 
     // check gameState
-    if(data.status.gameReady){
+    if(gameData.status.gameReady){
       this.setState({ })
     }
 
-
-    if(data.status.gameInProgress){
+    if(gameData.status.gameInProgress){
       this.setState({
-        status: data.status,
-        timeRemaining: data.status.timeRemaining,
-        rounds: data.rounds,
-        items: data.itemList,
-        playerList: data.playerList,
-        candidateList: this.filterCandidates(data.candidateList, data.itemList),
-        proposalList: data.rounds[data.status.currentRound].proposals.map(proposal => proposal.target)
+        status: gameData.status,
+        timeRemaining: gameData.status.timeRemaining,
+        rounds: gameData.rounds,
+        items: gameData.itemList,
+        playerList: gameData.playerList,
+        candidateList: this.filterCandidates(gameData.candidateList, gameData.itemList),
+        proposalList: gameData.rounds[gameData.status.currentRound].proposals.map(proposal => proposal.target)
       })
 
       // show counter display
       this.startCountdown()
     }
 
-    //
-    if(data.status.gameComplete){
-      this.setState({rounds: data.rounds})
+    if(gameData.status.gameComplete){
+      this.setState({
+        status: gameData.status,
+        rounds: gameData.rounds,
+        playerList: gameData.playerList
+      })
     }
 
   }
   socketError(data){
     console.log('Reconnecting... Attempts:', data)
   }
-
-
-  // Modal functions
-  openModal() { this.setState({modalIsOpen: true})}
-  afterOpenModal() {}
-  closeModal() { this.setState({modalIsOpen: false})}
 
 
   // Submit functions
@@ -152,18 +144,18 @@ class FormComponent extends Component {
     places = places || 4
     return +(Math.round(value + "e+" + places)  + "e-" + places);
   }
-  displayWei(input){
-    let ethereum = ''
-    let wei = input
-    if(input){
-      if(typeof(input) === 'object'){
-        wei = wei.toNumber()
-      }
-      ethereum = this.round(web3.fromWei(wei, 'ether'), 5)
-    }
-    return 'Ξ' + ethereum + ' ETH ($' +
-     this.round(this.state.exchangeRate * web3.fromWei(wei, 'ether')) + ')'
-  }
+  // displayWei(input){
+  //   let ethereum = ''
+  //   let wei = input
+  //   if(input){
+  //     if(typeof(input) === 'object'){
+  //       wei = wei.toNumber()
+  //     }
+  //     ethereum = this.round(web3.fromWei(wei, 'ether'), 5)
+  //   }
+  //   return 'Ξ' + ethereum + ' ETH ($' +
+  //    this.round(this.state.exchangeRate * web3.fromWei(wei, 'ether')) + ')'
+  // }
   format(input){
     if(typeof(input) === 'object'){
       input = input.toNumber()
@@ -178,39 +170,48 @@ class FormComponent extends Component {
 
         <div style={{flex: '1'}}>
           <LoginButton tournamentId={this.props.params.tournamentId}/>
+          <time>{this.state.timeRemaining}</time>
         </div>
 
         <div style={{flex: '9', display: 'flex', flexDirection: 'row'}}>
 
           <div style={{flex: '4', display: 'flex', flexDirection: 'column'}}>
+
             <div className="game-panel" style={{flex: '5'}}>
 
-              <time style={{float: 'right', order: 20}}>{this.state.timeRemaining}
-              </time>
-
               {this.state.status.currentPhase === 'proposals' ?
+
                 <AddProposal
                   candidateList={this.state.candidateList}
                   itemList={this.state.items}
                   submitProposal={this.submitProposal}/>
-              :null}
 
+              :null}
               {this.state.status.currentPhase === 'votes' ?
+
                 <VoteOnProposal
                   proposalList={this.state.proposalList}
                   submitVote={this.submitVote.bind(this)}/>
-              :null}
 
+              :null}
               {this.state.status.currentPhase === 'results' ?
-                <RoundResults resultsList={this.state.items}/>
+
+                <RoundResults
+                  resultsList={this.state.items}/>
+
+              :null}
+              {this.state.status.currentPhase === 'complete' ?
+
+                <p>Complete</p>
+
               :null}
 
             </div>
+
             <div className="game-panel" style={{flex: '2'}}>
-
               <RoundProgress roundList={this.state.rounds}/>
-
             </div>
+
           </div>
 
           <div style={{flex: '2', display: 'flex', flexDirection: 'column'}}>
@@ -227,13 +228,6 @@ class FormComponent extends Component {
           </div>
 
         </div>
-
-        <WrappedModal
-          modalIsOpen={this.state.modalIsOpen}
-          onAfterOpen={this.afterOpenModal}
-          closeModal={this.closeModal}
-          transactionPending={this.props.transactionPending}
-          transactionID={this.props.transactionID}/>
 
       </main>
     )

@@ -4,18 +4,19 @@ import Cookies from 'js-cookie'
 
 import store from '../store'
 
-// Web 3 handoff UX
-export const REQUEST_SENT = 'REQUEST_SENT'
-function requestSent() {
-  return {
-    type: REQUEST_SENT
-  }
-}
+
 export const UPDATE_USER = 'UPDATE_USER'
 function updateUser(user) {
   return {
     type: UPDATE_USER,
     payload: user
+  }
+}
+export const UPDATE_LIST = 'UPDATE_LIST'
+function updateList(list) {
+  return {
+    type: UPDATE_LIST,
+    payload: list
   }
 }
 export const CONTRACT_CREATED = 'CONTRACT_CREATED'
@@ -26,8 +27,8 @@ function contractCreated(contract) {
   }
 }
 
-export function getUser(gameId){
 
+export function getUser(gameId){
   return function(dispatch){
 
     let cookie
@@ -54,9 +55,6 @@ export function login(gameId) {
   let userAddress = web3.eth.accounts[0]
 
   return function(dispatch) {
-
-    // "loading"
-    // dispatch(requestSent())
 
     const msgParams = [{
       name: 'Message',

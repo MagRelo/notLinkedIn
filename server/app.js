@@ -1,12 +1,8 @@
 const express = require('express')
 const app = express()
 const assert = require('assert')
-
 const sockets = require('./sockets.js')
 
-//
-// const twitterConsumerKey = 'a9nNKuouyFRamZSZyUtvRbkGl'
-// const twitterSecret = 'Ep9QTjcv5R4ry5py34Q4FjPlytahPMPABnGmGA293V4omVNVYE'
 const TwitterTokenStrategy = require('passport-twitter-token')
 
 // Express middleware
@@ -39,11 +35,6 @@ mongoose.connection.on('error', function(err) {
 	process.exit(-1);
 	}
 );
-
-// register GetStream with mongoose
-var stream = require('getstream-node');
-var StreamMongoose = stream.mongoose;
-StreamMongoose.setupMongoose(mongoose);
 
 // seed database
 if(process.env.SEED_DB_CLEAN === 'true'){

@@ -16,7 +16,6 @@ var gameAuth = function socketAuth(socket, next){
     console.log('no servesa cookie');
   } else {
 
-    // parse JSON
     let cookieObject
     try {
       cookieObject = JSON.parse(parsedCookie.servesa)
@@ -24,34 +23,36 @@ var gameAuth = function socketAuth(socket, next){
       console.log(e);
     }
 
-    // setup recovery
-    const msgParams = [{
-      name: 'Message',
-      type: 'string',
-      value: 'You will be logged into game ' + cookieObject.gameId
-    }]
-    const recovered = sigUtil.recoverTypedSignature({
-      data: msgParams,
-      sig: cookieObject.signature
-    })
+    if(cookieObject){
+      // setup recovery
+      const msgParams = [{
+        name: 'Message',
+        type: 'string',
+        value: 'You will be logged into game ' + cookieObject.gameId
+      }]
+      const recovered = sigUtil.recoverTypedSignature({
+        data: msgParams,
+        sig: cookieObject.signature
+      })
 
-    // if it matches then we have a valid cookie.
-    if (recovered === cookieObject.userAddress) {
-      console.log('Recovered signer: ' + recovered)
+      // if it matches then we have a valid cookie.
+      if (recovered === cookieObject.userAddress) {
+        // console.log('Recovered signer: ' + recovered)
 
-      // check session store for this address, and return the games that they should have access to
-      // TODO - for testing we'll take their word for it
-      socket.userId = cookieObject.userAddress
-      socket.gameId = cookieObject.gameId
+        // check session store for this address, and return the games that they should have access to
+        // TODO - for testing we'll take their word for it
+        socket.userId = cookieObject.userAddress
+        socket.gameId = cookieObject.gameId
 
-    } else {
-      console.log('Failed to verify signer, got: ' + recovered)
-      // box em out
+      } else {
+        console.log('Failed to verify signer, got: ' + recovered)
+        // box em out
+      }
     }
+
   }
 
   return next();
-
 };
 
 exports.startIo = function startIo(server){

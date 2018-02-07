@@ -10,9 +10,8 @@ var StreamMongoose = stream.mongoose;
 var GameSchema = new Schema({
   config: {
     rounds: Number,
-    phaseTimerLength: Number,
-    tournamentStart: Date,
-    lengthOfPhase: Number
+    lengthOfPhase: Number,
+    tournamentStart: Date
   },
   playerList: [],
   candidateList: [],
@@ -27,7 +26,12 @@ var GameSchema = new Schema({
     gameComplete: Boolean
   },
   rounds: [{
-    meta: Object,
+    meta: {
+      index: Number,
+      roundNumber: Number,
+      proposalsClosed: Boolean,
+      votesClosed: Boolean
+    },
     proposals: [],
     votes: [],
     results: {}
@@ -41,35 +45,10 @@ var GameSchema = new Schema({
   }
 });
 
-function buildRounds(config){
-
-  let rounds = []
-  const numberOfRounds = config.rounds
-
-  // build rounds
-  while (rounds.length < rounds, index){
-    rounds.push({
-      meta: {
-        index: index,
-        roundNumber: index + 1,
-        startTime: null
-      },
-      proposals: [],
-      votes: [],
-      results: {
-        proposalVotes: [],
-        playerList: [],
-      }
-    })
-  }
-
-  return rounds
-}
-
 
 GameSchema.methods.addProposal = function(userId, data){
 
-  const roundData = gameDoc.rounds[currentRound]
+  const roundData = this.rounds[this.status.currentRound]
   const existingProposalIndex = roundData.proposals.findIndex(proposal => {return proposal.symbol === data.proposalTarget.symbol})
   if (existingProposalIndex > -1 ) {
     roundData.proposals[proposalIndex] = {
@@ -87,32 +66,31 @@ GameSchema.methods.addProposal = function(userId, data){
       target: data.proposalTarget
     })
   }
-  gameDoc.rounds[currentRound] = roundData
-  return GameSchema.update({'_id': gameDoc._id}, gameDoc, {new: true})
+  this.rounds[currentRound] = roundData
 
   return this.save()
 }
 
 GameSchema.methods.addVote = function(userId, data){
 
-  const roundData = gameDoc.rounds[currentRound]
-  const existingProposalIndex = roundData.vote.findIndex(proposal => {return proposal.userId === userId})
-  if (existingProposalIndex > -1 ) {
-    roundData.proposals[proposalIndex] = {
-      userId: userId,
-      round: currentRound,
-      action: data.proposalAction,
-      target: data.proposalTarget
-    }
-  } else {
-    roundData.proposals.push({
-      userId: userId,
-      round: currentRound,
-      action: data.proposalAction,
-      target: data.proposalTarget
-    })
-  }
-  gameDoc.rounds[currentRound] = roundData
+  // const roundData = this.rounds[this.status.currentRound]
+  // const existingProposalIndex = roundData.vote.findIndex(proposal => {return proposal.userId === userId})
+  // if (existingProposalIndex > -1 ) {
+  //   roundData.proposals[proposalIndex] = {
+  //     userId: userId,
+  //     round: currentRound,
+  //     action: data.proposalAction,
+  //     target: data.proposalTarget
+  //   }
+  // } else {
+  //   roundData.proposals.push({
+  //     userId: userId,
+  //     round: currentRound,
+  //     action: data.proposalAction,
+  //     target: data.proposalTarget
+  //   })
+  // }
+  // this.rounds[currentRound] = roundData
 
   return this.save()
 }
@@ -125,12 +103,12 @@ GameSchema.statics.updateAndFetch = function(gameId) {
 
       // STATUS
       if(gameDoc.status.gameInProgress){
-        gameDoc.status = buildStatus(gameDoc.status, gameDoc.config)
+        gameDoc.status = updateStatus(gameDoc.status, gameDoc.config)
       }
 
       // ROUNDS
       // if (gameDoc.status.closeRound){
-      //   gameDoc.rounds[gameDoc.status.currentRound - 1] = completeRound(gameDoc.status.currentRound - 1)
+      //   gameDoc.rounds[gameDoc.status.currentRound - 1] =
       //   gameDoc.status.closeRound = false
       // }
 
@@ -161,9 +139,9 @@ GameSchema.statics.updateAndFetch = function(gameId) {
 
       return gameDoc.save()
     })
-    // .then(savedDoc => {
-    //   return this.findOne({_id: gameId}, {public: 1})
-    // })
+    .then(savedDoc => {
+      return this.findOne({_id: gameId}, {public: 1})
+    })
 
 };
 
@@ -174,33 +152,33 @@ GameSchema.plugin(stream.mongoose.activity);
 module.exports = mongoose.model('Game', GameSchema);
 
 
-function transitionStatus(currentStatus, lengthOfPhase){
 
-  const newStartTime = new Date()
-  let currentPhase = ''
-  let currentRound = currentStatus.currentRound
-  let closeRound = false
+function buildRounds(config){
 
-  if(currentStatus.currentPhase === 'proposals'){ currentPhase = 'votes' }
-  if(currentStatus.currentPhase === 'votes'){ currentPhase = 'results' }
-  if(currentStatus.currentPhase === 'results'){
-    currentPhase = 'proposals'
-    currentRound =  parseInt(currentRound, 10) + 1
-    closeRound = true
+  let rounds = []
+  const numberOfRounds = config.rounds
+
+  // build rounds
+  while (rounds.length < rounds, index){
+    rounds.push({
+      meta: {
+        index: index,
+        roundNumber: index + 1,
+        startTime: null
+      },
+      proposals: [],
+      votes: [],
+      results: {
+        proposalVotes: [],
+        playerList: [],
+      }
+    })
   }
 
-  return {
-    closeRound: closeRound,
-    "currentPhase": currentPhase,
-    "currentRound": currentRound,
-    "phaseStartTime": newStartTime.toISOString(),
-    "timeRemaining" : lengthOfPhase,
-    "gameInProgress": true
-  }
+  return rounds
 }
 
-
-function buildStatus(currentStatus, config){
+function updateStatus(currentStatus, config){
   const phaseStart = moment(currentStatus.phaseStartTime)
   const secondsElapsed = moment().diff(phaseStart, 'seconds')
   const timeRemaining = config.lengthOfPhase - secondsElapsed
@@ -219,23 +197,42 @@ function buildStatus(currentStatus, config){
   if(timeRemaining <= 0
     && currentStatus.currentPhase === 'results'
     && currentStatus.currentRound + 1 >= config.rounds){
-    console.log('Game Over:', currentStatus.currentRound + 1, '>', config.rounds);
-    status.gameInProgress = false
+      console.log('Game Over:', currentStatus.currentRound + 1, '>', config.rounds);
+      status.currentPhase = 'complete'
+      status.gameInProgress = false
+      status.gameComplete = true      
   }
 
   // transition to next phase
   if(timeRemaining <= 0
     && status.gameInProgress){
-    console.log('transition from: ', currentStatus.currentRound,'-', currentStatus.currentPhase);
-    status = transitionStatus(currentStatus, config.lengthOfPhase)
+      console.log('transition from: ', currentStatus.currentRound,'-', currentStatus.currentPhase);
+      status = transitionStatus(currentStatus, config.lengthOfPhase)
   }
 
   return status
 }
+function transitionStatus(currentStatus, lengthOfPhase){
 
-function completeRound(round){
+  const newStartTime = new Date()
+  let newPhase = ''
+  let newRound = currentStatus.currentRound
+  let closeRound = false
 
-  console.log('complete Round:', round);
-  return true
+  if(currentStatus.currentPhase === 'proposals'){ newPhase = 'votes' }
+  if(currentStatus.currentPhase === 'votes'){ newPhase = 'results' }
+  if(currentStatus.currentPhase === 'results'){
+    newPhase = 'proposals'
+    newRound =  parseInt(currentRound, 10) + 1
+    closeRound = true
+  }
 
+  return {
+    closeRound: closeRound,
+    "currentPhase": newPhase,
+    "currentRound": newRound,
+    "phaseStartTime": newStartTime.toISOString(),
+    "timeRemaining" : lengthOfPhase,
+    "gameInProgress": true
+  }
 }
